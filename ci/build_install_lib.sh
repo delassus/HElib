@@ -13,15 +13,17 @@
 
 set -xe
 
-if [ "$#" -ne 4 ]; then
-  echo "Wrong parameter number. Usage ./${0} <PACKAGE_BUILD> <USE_INTEL_HEXL> <CMAKE_INSTALL_PREFIX> <INTEL_HEXL_DIR>"
+if [ "$#" -ne 6 ]; then
+  echo "Wrong parameter number. Usage ./${0} <PACKAGE_BUILD> <CMAKE_INSTALL_PREFIX> <C_COMPILER> <CXX_COMPILER> <USE_INTEL_HEXL> <INTEL_HEXL_DIR>"
   exit 1
 fi
 
 PACKAGE_BUILD="${1}"
 CMAKE_INSTALL_PREFIX="${2}"
-USE_INTEL_HEXL="${3}"
-INTEL_HEXL_DIR="${4}"
+C_COMPILER="${3}"
+CXX_COMPILER="${4}"
+USE_INTEL_HEXL="${5}"
+INTEL_HEXL_DIR="${6}"
 ROOT_DIR="$(pwd)"
 
 mkdir build
@@ -30,6 +32,8 @@ cd build
 cmake -DPACKAGE_BUILD="${PACKAGE_BUILD}" \
       -DCMAKE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}" \
       -DUSE_INTEL_HEXL="${USE_INTEL_HEXL}" \
+      -DCMAKE_C_COMPILER="${C_COMPILER}" \
+      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
       -DHEXL_DIR="${INTEL_HEXL_DIR}" \
       -DBUILD_SHARED=OFF \
       -DENABLE_TEST=ON \
