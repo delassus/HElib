@@ -2633,6 +2633,34 @@ TEST_P(TestPtxtBGV, minusEqualsWithCiphertextWorks)
   }
 }
 
+TEST_P(TestPtxtBGV, minusEqualsPtxtMinusCiphertextWorks)
+{
+  context.buildModChain(30, 2);
+  helib::SecKey secret_key(context);
+  secret_key.GenSecKey();
+  const helib::PubKey& public_key(secret_key);
+
+  // Encrypt the minuend, subtrahend is plaintext
+  std::vector<long> minuend_data(context.getEA().size());
+  std::vector<long> subtrahend_data(context.getEA().size());
+  std::iota(minuend_data.begin(), minuend_data.end(), 0);
+  std::iota(subtrahend_data.begin(), subtrahend_data.end(), 7);
+  helib::Ptxt<helib::BGV> minuend_ptxt(context, minuend_data);
+  helib::Ptxt<helib::BGV> subtrahend(context, subtrahend_data);
+  helib::Ctxt minuend(public_key);
+  public_key.Encrypt(minuend, minuend_ptxt);
+
+  subtrahend -= minuend;
+  subtrahend -= minuend_ptxt;
+
+  // minuend_ptxt and minuend should now match
+  helib::Ptxt<helib::BGV> result(context);
+  secret_key.Decrypt(result, minuend);
+  for (std::size_t i = 0; i < result.size(); ++i) {
+    EXPECT_EQ(result[i], subtrahend[i]);
+  }
+}
+
 TEST_P(TestPtxtBGV, timesEqualsWithCiphertextWorks)
 {
   context.buildModChain(30, 2);

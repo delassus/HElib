@@ -75,9 +75,9 @@ inline Matrix<TXT> calculateMasks(const EncryptedArray& ea,
  * @note This is an overloaded function for when the database is encrypted.
  **/
 template <typename TXT>
-Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
-                            Matrix<TXT> query,
-                            const Matrix<Ctxt>& database)
+inline Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
+                                   Matrix<TXT> query,
+                                   const Matrix<Ctxt>& database)
 {
   if (query.dims(0) != 1)
     throw InvalidArgument("Query must be a row vector");

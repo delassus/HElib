@@ -1219,6 +1219,156 @@ TEST_P(TestMatrixWithCtxt, MultiplyTwoCtxtMatrices)
   EXPECT_TRUE(std::equal(P(1, 1).begin(), P(1, 1).end(), a3.begin()));
 }
 
+TEST_P(TestMatrixWithCtxt, subtractPtxtMatrixFromCtxtMatrix)
+{
+  helib::Ctxt blankCtxt(pk);
+  helib::Ptxt<helib::BGV> blankPtxt(context);
+
+  helib::Matrix<helib::Ctxt> ctxtM(blankCtxt, 2, 3);
+  helib::Matrix<helib::Ptxt<helib::BGV>> ptxtM(blankPtxt, 2, 3);
+
+  // some values
+  std::vector<std::vector<long>> d1 = {{0},{1}};
+  std::vector<std::vector<long>> d2 = {{2},{3}};
+  std::vector<std::vector<long>> d3 = {{4},{5}};
+  std::vector<std::vector<long>> d4 = {{6},{7}};
+  std::vector<std::vector<long>> d5 = {{8},{9}};
+  std::vector<std::vector<long>> d6 = {{10},{11}};
+
+  // some answers
+  std::vector<long> a1 = {10, 10};
+  std::vector<long> a2 = {6, 6};
+  std::vector<long> a3 = {2, 2};
+  std::vector<long> a4 = {-2, -2};
+  std::vector<long> a5 = {-6, -6};
+  std::vector<long> a6 = {-10, -10};
+
+  auto mod_p = [this](long& x) { (x += this->p) %= this->p; };
+  std::for_each(a1.begin(), a1.end(), mod_p);
+  std::for_each(a2.begin(), a2.end(), mod_p);
+  std::for_each(a3.begin(), a3.end(), mod_p);
+  std::for_each(a4.begin(), a4.end(), mod_p);
+  std::for_each(a5.begin(), a5.end(), mod_p);
+  std::for_each(a6.begin(), a6.end(), mod_p);
+
+  // Populate Ptxt matrix
+  ptxtM(0, 0) = helib::Ptxt<helib::BGV>(context, d1);
+  ptxtM(0, 1) = helib::Ptxt<helib::BGV>(context, d2);
+  ptxtM(0, 2) = helib::Ptxt<helib::BGV>(context, d3);
+  ptxtM(1, 0) = helib::Ptxt<helib::BGV>(context, d4);
+  ptxtM(1, 1) = helib::Ptxt<helib::BGV>(context, d5);
+  ptxtM(1, 2) = helib::Ptxt<helib::BGV>(context, d6);
+
+  // Populate Ctxt matrix
+  pk.Encrypt(ctxtM(0, 0), ptxtM(1, 2));
+  pk.Encrypt(ctxtM(0, 1), ptxtM(1, 1));
+  pk.Encrypt(ctxtM(0, 2), ptxtM(1, 0));
+  pk.Encrypt(ctxtM(1, 0), ptxtM(0, 2));
+  pk.Encrypt(ctxtM(1, 1), ptxtM(0, 1));
+  pk.Encrypt(ctxtM(1, 2), ptxtM(0, 0));
+
+  // Subtraction
+  helib::Matrix<helib::Ctxt> resultM = ctxtM - ptxtM;
+  helib::Matrix<std::vector<long>> P(2, 3);
+
+  // Decrypt result
+  ea.decrypt(resultM(0, 0), sk, P(0, 0));
+  ea.decrypt(resultM(0, 1), sk, P(0, 1));
+  ea.decrypt(resultM(0, 2), sk, P(0, 2));
+  ea.decrypt(resultM(1, 0), sk, P(1, 0));
+  ea.decrypt(resultM(1, 1), sk, P(1, 1));
+  ea.decrypt(resultM(1, 2), sk, P(1, 2));
+
+  // Check dimensions
+  EXPECT_EQ(resultM.size(), 2 * 3);
+  EXPECT_EQ(resultM.dims(0), 2);
+  EXPECT_EQ(resultM.dims(1), 3);
+  EXPECT_EQ(resultM.order(), 2);
+
+  // Check result
+  EXPECT_TRUE(std::equal(P(0, 0).begin(), P(0, 0).end(), a1.begin()));
+  EXPECT_TRUE(std::equal(P(0, 1).begin(), P(0, 1).end(), a2.begin()));
+  EXPECT_TRUE(std::equal(P(0, 2).begin(), P(0, 2).end(), a3.begin()));
+  EXPECT_TRUE(std::equal(P(1, 0).begin(), P(1, 0).end(), a4.begin()));
+  EXPECT_TRUE(std::equal(P(1, 1).begin(), P(1, 1).end(), a5.begin()));
+  EXPECT_TRUE(std::equal(P(1, 2).begin(), P(1, 2).end(), a6.begin()));
+}
+
+// TEST_P(TestMatrixWithCtxt, subtractCtxtMatrixFromPtxtMatrix)
+// {
+  // helib::Ctxt blankCtxt(pk);
+  // helib::Ptxt<helib::BGV> blankPtxt(context);
+// 
+  // helib::Matrix<helib::Ctxt> ctxtM(blankCtxt, 2, 3);
+  // helib::Matrix<helib::Ptxt<helib::BGV>> ptxtM(blankPtxt, 2, 3);
+// 
+  // // some values
+  // std::vector<std::vector<long>> d1 = {{0},{1}};
+  // std::vector<std::vector<long>> d2 = {{2},{3}};
+  // std::vector<std::vector<long>> d3 = {{4},{5}};
+  // std::vector<std::vector<long>> d4 = {{6},{7}};
+  // std::vector<std::vector<long>> d5 = {{8},{9}};
+  // std::vector<std::vector<long>> d6 = {{10},{11}};
+// 
+  // // some answers
+  // std::vector<long> a1 = {-10, -10};
+  // std::vector<long> a2 = {-6, -6};
+  // std::vector<long> a3 = {-2, -2};
+  // std::vector<long> a4 = {2, 2};
+  // std::vector<long> a5 = {6, 6};
+  // std::vector<long> a6 = {10, 10};
+// 
+  // auto mod_p = [this](long& x) { (x += this->p) %= this->p; };
+  // std::for_each(a1.begin(), a1.end(), mod_p);
+  // std::for_each(a2.begin(), a2.end(), mod_p);
+  // std::for_each(a3.begin(), a3.end(), mod_p);
+  // std::for_each(a4.begin(), a4.end(), mod_p);
+  // std::for_each(a5.begin(), a5.end(), mod_p);
+  // std::for_each(a6.begin(), a6.end(), mod_p);
+// 
+  // // Populate Ptxt matrix
+  // ptxtM(0, 0) = helib::Ptxt<helib::BGV>(context, d1);
+  // ptxtM(0, 1) = helib::Ptxt<helib::BGV>(context, d2);
+  // ptxtM(0, 2) = helib::Ptxt<helib::BGV>(context, d3);
+  // ptxtM(1, 0) = helib::Ptxt<helib::BGV>(context, d4);
+  // ptxtM(1, 1) = helib::Ptxt<helib::BGV>(context, d5);
+  // ptxtM(1, 2) = helib::Ptxt<helib::BGV>(context, d6);
+// 
+  // // Populate Ctxt matrix
+  // pk.Encrypt(ctxtM(0, 0), ptxtM(1, 2));
+  // pk.Encrypt(ctxtM(0, 1), ptxtM(1, 1));
+  // pk.Encrypt(ctxtM(0, 2), ptxtM(1, 0));
+  // pk.Encrypt(ctxtM(1, 0), ptxtM(0, 2));
+  // pk.Encrypt(ctxtM(1, 1), ptxtM(0, 1));
+  // pk.Encrypt(ctxtM(1, 2), ptxtM(0, 0));
+// 
+  // // Subtraction
+  // helib::Matrix<helib::Ctxt> resultM = ptxtM - ctxtM;
+  // helib::Matrix<std::vector<long>> P(2, 3);
+// 
+  // // Decrypt result
+  // ea.decrypt(resultM(0, 0), sk, P(0, 0));
+  // ea.decrypt(resultM(0, 1), sk, P(0, 1));
+  // ea.decrypt(resultM(0, 2), sk, P(0, 2));
+  // ea.decrypt(resultM(1, 0), sk, P(1, 0));
+  // ea.decrypt(resultM(1, 1), sk, P(1, 1));
+  // ea.decrypt(resultM(1, 2), sk, P(1, 2));
+// 
+  // // Check dimensions
+  // EXPECT_EQ(resultM.size(), 2 * 3);
+  // EXPECT_EQ(resultM.dims(0), 2);
+  // EXPECT_EQ(resultM.dims(1), 3);
+  // EXPECT_EQ(resultM.order(), 2);
+// 
+  // // Check result
+  // EXPECT_TRUE(std::equal(P(0, 0).begin(), P(0, 0).end(), a1.begin()));
+  // EXPECT_TRUE(std::equal(P(0, 1).begin(), P(0, 1).end(), a2.begin()));
+  // EXPECT_TRUE(std::equal(P(0, 2).begin(), P(0, 2).end(), a3.begin()));
+  // EXPECT_TRUE(std::equal(P(1, 0).begin(), P(1, 0).end(), a4.begin()));
+  // EXPECT_TRUE(std::equal(P(1, 1).begin(), P(1, 1).end(), a5.begin()));
+  // EXPECT_TRUE(std::equal(P(1, 2).begin(), P(1, 2).end(), a6.begin()));
+// }
+
 TEST_P(TestMatrixWithCtxt, TestBasicCtxt)
 {
   helib::Ctxt blank(pk);

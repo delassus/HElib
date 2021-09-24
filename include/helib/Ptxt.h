@@ -522,7 +522,9 @@ public:
    * @param scalar Element to be subtracted across all slots.
    * @return Reference to `*this` post scalar subtraction.
    **/
-  template <typename Scalar>
+  template <typename Scalar,
+            std::enable_if_t<std::is_arithmetic_v<Scalar> ||
+              std::is_same_v<Scalar, std::complex<double>>>* = nullptr>
   Ptxt<Scheme>& operator-=(const Scalar& scalar)
   {
     assertTrue<RuntimeError>(isValid(),
@@ -532,6 +534,20 @@ public:
       this->slots[i] -= scalar;
     }
     return *this;
+  }
+
+  template <typename TXT,
+            std::enable_if_t<!std::is_arithmetic_v<TXT> &&
+              !std::is_same_v<TXT, std::complex<double>> &&
+              !std::is_same_v<TXT, Ptxt<Scheme>>>* = nullptr>
+  TXT& operator-=(TXT& txt)
+  {
+    assertTrue<RuntimeError>(isValid(),
+                             "Cannot call operator-= on "
+                             "default-constructed Ptxt");
+    txt -= *this;
+    txt.negate(); // -(txt - this) == this - txt
+    return txt;
   }
 
   /**
