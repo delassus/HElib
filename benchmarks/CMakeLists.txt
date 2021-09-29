@@ -11,7 +11,7 @@
 # limitations under the License. See accompanying LICENSE file.
 
 cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
-              
+
 ## Use -std=c++17 as default.
 set(CMAKE_CXX_STANDARD 17)
 ## Disable C++ extensions
@@ -33,6 +33,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 # Will be compiled into single executable
 option(SINGLE_EXEC "Compile into single excutable (ON/OFF)" OFF)
+message(STATUS "SINGLE_EXEC: ${SINGLE_EXEC}")
 if(SINGLE_EXEC)
   message(STATUS "Single executable activated.")
 endif()

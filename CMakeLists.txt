@@ -113,8 +113,8 @@ if (NOT TARGET_ARCHITECTURE)
       FORCE)
 endif (NOT TARGET_ARCHITECTURE)
 
-set(HELIB_SP_NBITS "0" 
-    CACHE 
+set(HELIB_SP_NBITS "0"
+    CACHE
     STRING "Override the bitsize for the ciphertext primes used")
 if (NOT HELIB_SP_NBITS EQUAL 0)
   # Now check within bounds. NB. zero is special value to not override
@@ -132,17 +132,25 @@ option(BUILD_SHARED "Build as shared library" OFF)
 option(PACKAGE_BUILD
        "Download dependencies and build as a self-contained package"
        OFF)
-
 option(ENABLE_THREADS
        "Enable threads support.  Requires NTL built with NTL_THREADS=on"
        ON)
-
 option(HELIB_DEBUG
        "Build with HELIB_DEBUG (enables extra debugging info, but needs to be initialized)"
        OFF)
 option(ENABLE_TEST "Enable tests" OFF)
+option(ENABLE_BENCHMARK "Enable benchmarks" OFF)
 option(USE_INTEL_HEXL "Use Intel HEXL library" OFF)
 option(PEDANTIC_BUILD "Use -Wall -Wpedantic -Wextra -Werror during build" ON)
+
+message(STATUS "BUILD_SHARED:     ${BUILD_SHARED}")
+message(STATUS "PACKAGE_BUILD:    ${PACKAGE_BUILD}")
+message(STATUS "ENABLE_THREADS:   ${ENABLE_THREADS}")
+message(STATUS "HELIB_DEBUG:      ${HELIB_DEBUG}")
+message(STATUS "ENABLE_TEST:      ${ENABLE_TEST}")
+message(STATUS "ENABLE_BENCHMARK: ${ENABLE_BENCHMARK}")
+message(STATUS "USE_INTEL_HEXL:   ${USE_INTEL_HEXL}")
+message(STATUS "PEDANTIC_BUILD:   ${PEDANTIC_BUILD}")
 
 # Add properties dependent to PACKAGE_BUILD
 if (PACKAGE_BUILD)
@@ -153,6 +161,7 @@ if (PACKAGE_BUILD)
       STRING "Folder with the compilation output directory (DEFAULT: helib_pack)")
 
   option(FETCH_GMP "Fetch and compile the GMP library (DEFAULT: ON)" ON)
+  message(STATUS "FETCH_GMP: ${FETCH_GMP}")
 else (PACKAGE_BUILD)
   # Properties to be enabled when not using PACKAGE_BUILD
 endif (PACKAGE_BUILD)
@@ -186,6 +195,10 @@ endif (PEDANTIC_BUILD)
 if (ENABLE_TEST)
   enable_testing()
 endif (ENABLE_TEST)
+
+if (ENABLE_BENCHMARK)
+  add_subdirectory(benchmarks)
+endif()
 
 # Look for pthread using default FindThreads.cmake script
 find_package(Threads)
