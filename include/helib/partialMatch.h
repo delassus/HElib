@@ -246,6 +246,34 @@ private:
   int column;
 };
 
+
+/**
+* @class Not
+* @brief An object representing the logical NOT expression which inherits from
+* `Expr`.
+**/
+class Not : public Expr
+{
+public:
+  /**
+  * @brief Function for returning the logical NOT expression where the NOT
+  * operation is represented by `-` and each operand * is a column number.
+  * @return A string representing the NOT expression, where i- is not column i
+  **/
+  std::string eval() const override
+  {
+      return p->eval() + " !";
+  }
+  /**
+  * @brief Constructor.
+  * @param p The operand of the expression.
+  **/
+  Not(const QueryExpr &exp) : p(exp) {}
+
+private:
+  QueryExpr p;
+  };
+
 /**
  * @class And
  * @brief An object representing the logical AND expression which inherits from
@@ -309,6 +337,17 @@ private:
   QueryExpr lhs;
   QueryExpr rhs;
 };
+
+/**
+* @brief Overloaded operator for creating a shared pointer to a NOT
+* expression.
+* @param p operand of the NOT expression.
+* @return Shared pointer to the class `Not`.
+**/
+inline std::shared_ptr<Not> operator!(const QueryExpr &p)
+{
+  return std::make_shared<Not>(p);
+}
 
 /**
  * @brief Overloaded operator for creating a shared pointer to an AND
@@ -427,7 +466,7 @@ public:
   {
 
     // Convert the query to "type 1" by expanding out necessary ORs
-    vecvec expr = expandOr(query_str);
+    vecvec expr = expandOr(query_str); // to allow for zero ordering, (i+1) corresponds to i, negatives correspond to not
     bool containsOR = false;
 
     vecvec Fs(expr.size());
@@ -445,8 +484,12 @@ public:
       mus[i] = 0;                                  // Set mu to zero.
       Matrix<long> M(columns, 1);                  // Create temp tau matrix
       containsOR = (expr[i].size() > 1) ? true : false;
-      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
-        M(expr[i][j], 0) = 1;                         // Mark those columns as 1
+      for (long j = 0; j < long(expr[i].size()); ++j)   // Each column index
+        {
+          M(abs(expr[i][j]) - 1, 0) = (expr[i][j] >= 0)? 1 : -1; // mark "not" columns as -1, columns as 1
+          if (expr[i][j] < 0)
+            mus[i] += 1;                         //add one to the offset for each not
+      }
       taus.push_back(std::move(M));
     }
 
@@ -515,11 +558,16 @@ private:
           }
 
         convertStack.push(std::move(prod));
-      } else {
+      } 
+      else if (!symbol.compare("!"))
+        {
+          // top of the stack should be of the form [(i),...]. Change to (-i).
+          convertStack.top()[0][0] *= -1;
+        }else {
         // Assume it is a number. But sanity check anyway.
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
-        convertStack.emplace(vecvec(1, {std::stol(symbol)}));
+        convertStack.emplace(vecvec(1, {std::stol(symbol) + 1}));
       }
     }
 
