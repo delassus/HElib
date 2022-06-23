@@ -567,7 +567,7 @@ private:
         // Assume it is a number. But sanity check anyway.
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
-        convertStack.emplace(vecvec(1, {std::stol(symbol) + 1}));
+        convertStack.emplace(vecvec(1, {std::stol(symbol) + 1}));//using 1 ordering temporarily
       }
     }
 
