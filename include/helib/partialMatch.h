@@ -15,6 +15,7 @@
 
 #include <sstream>
 #include <stack>
+#include <unordered_set>
 
 #include <helib/Matrix.h>
 #include <helib/PolyMod.h>
@@ -558,6 +559,38 @@ private:
     return notclause;
   }
 
+  vecvec Tidy(const vecvec expr) const
+  {
+    vecvec x;
+    for(auto y : expr){
+      auto z = tidyclause(y);
+      if(z.size() != 0)
+        x.push_back(z);
+    }
+    return x;
+  }
+
+  std::vector<long> tidyclause(const std::vector<long> clause) const
+  {
+    std::unordered_set<long> vars;
+    std::vector<long> newclause1;
+    for(auto i : clause){
+      if(vars.find(i)==vars.end()){
+        newclause1.push_back(i);
+        vars.insert(i);
+        }
+      else{
+        continue;
+      }
+    }
+    std::vector<long> newclause2;
+    for(auto i : newclause1){
+      if(vars.find(-1*i)==vars.end())
+        newclause2.push_back(i);
+    }
+    return newclause2;
+  }
+
   vecvec expandOr(const std::string& s) const
   {
     std::stack<vecvec> convertStack;
@@ -611,7 +644,7 @@ private:
                          convertStack.size(),
                          "Size of stack after expandOr should be 1");
 
-    return std::move(convertStack.top());
+    return Tidy(convertStack.top());
   }
 };
 
