@@ -22,8 +22,8 @@ modulus=13
 #modulus=1278209
 datadir="data_and_params"
 data_prefix="../$datadir"
-db_encoded="../db${nslots}.encoded"
-query_encoded="../query${nslots}.encoded"
+db_encoded="../db${nslots}.enc"
+query_encoded="../query${nslots}.enc"
 lookup="../../build/bin/lookup"
 
 # Run once per test
@@ -44,17 +44,27 @@ function teardown {
   echo "lookup 64 threads" > README
   $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=64
 
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_a -o "result.ptxt_a"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_!a -o "result.ptxt_!a"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_b -o "result.ptxt_b"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_c -o "result.ptxt_c"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand1 -o "result.ptxt_expand1"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand2 -o "result.ptxt_expand2"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aOr_!bAndc -o "result.ptxt_aOr_!bAndc"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aAnd!b -o "result.ptxt_aAnd!b"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_a -o "result.ptxt_a"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_!a -o "result.ptxt_!a"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_b -o "result.ptxt_b"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_c -o "result.ptxt_c"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand1 -o "result.ptxt_expand1"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand2 -o "result.ptxt_expand2"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand3 -o "result.ptxt_expand3"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_!bAndc_Or_!a -o "result.ptxt_!bAndc_Or_!a"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aOr_!bAndc -o "result.ptxt_aOr_!bAndc"
+  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aAnd!b -o "result.ptxt_aAnd!b"
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doublevars -o "result.ptxt_doublevars"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofOr1 -o "result.ptxt_NotofOr1"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofOr2 -o "result.ptxt_NotofOr2"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doubleNot1 -o "result.ptxt_doubleNot1"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doubleNot2 -o "result.ptxt_doubleNot2"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofAnd1 -o "result.ptxt_NotofAnd1"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofAnd2 -o "result.ptxt_NotofAnd2"
   
 
   ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"

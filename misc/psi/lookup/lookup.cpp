@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
   helib::QueryBuilder qbComplex1(a || (!b && c));
   helib::QueryBuilder qbComplex2(((!b && c) || (!a)));
   helib::QueryBuilder qbComplex3((a && !b));
+  helib::QueryBuilder qbdoublevars(a || !a);
   helib::QueryBuilder qbNotofOr1(!(a||b||c));
   helib::QueryBuilder qbNotofOr2(!(a||b) && c);
   helib::QueryBuilder qbdoubleNot1(!!a);
@@ -143,6 +144,8 @@ int main(int argc, char* argv[])
   helib::Query_t queryComplex2 = qbComplex2.build(database.columns());
   std::cout << "query a and !b:\n";
   helib::Query_t queryComplex3 = qbComplex3.build(database.columns());**/
+  std:: cout << "query nota or a:\n";
+  helib::Query_t querydoublevars = qbdoublevars.build(database.columns());
   std:: cout << "query not(a or b or c):\n";
   helib::Query_t queryNotofOr1 = qbNotofOr1.build(database.columns());
   std:: cout << "query not(a or b) and c:\n";
@@ -209,6 +212,10 @@ int main(int argc, char* argv[])
   auto matchcomplex3 = database.contains(queryComplex3, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupComplex3);*/
 
+  HELIB_NTIMER_START(lookupdoublevars);
+  auto doublevars = database.contains(querydoublevars, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupdoublevars);
+  
   HELIB_NTIMER_START(lookupNotofOr1);
   auto NotofOr1 = database.contains(queryNotofOr1, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupNotofOr1);
@@ -273,6 +280,9 @@ int main(int argc, char* argv[])
                      matchcomplex3,
                      cmdLineOpts.offset);
   **/
+  writeResultsToFile(cmdLineOpts.outFilePath + "_doublevars",
+                     doublevars,
+                     cmdLineOpts.offset);
   writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr1",
                      NotofOr1,
                      cmdLineOpts.offset);

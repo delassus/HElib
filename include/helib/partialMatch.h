@@ -486,9 +486,10 @@ public:
       containsOR = (expr[i].size() > 1) ? true : false;
       for (long j = 0; j < long(expr[i].size()); ++j)   // Each column index
         {
+          if (expr[i][j] < 0 &&(M(abs(expr[i][j]) - 1, 0)>=0)) // add one to the offset for each not: second condition to remedy case where column appears twice in one clause
+            mus[i] += 1;
           M(abs(expr[i][j]) - 1, 0) = (expr[i][j] >= 0)? 1 : -1; // mark "not" columns as -1, columns as 1
-          if (expr[i][j] < 0)
-            mus[i] += 1;                         //add one to the offset for each not
+                        
       }
       taus.push_back(std::move(M));
     }
