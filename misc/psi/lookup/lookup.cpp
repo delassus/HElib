@@ -108,12 +108,18 @@ int main(int argc, char* argv[])
   helib::QueryBuilder qbOr(a || b);
   helib::QueryBuilder qbExpand1(a || (b && c));
   helib::QueryBuilder qbExpand2((a || b) && c);
-  // helib::QueryBuilder qbExpand3((a && b) || (a && b));
+  helib::QueryBuilder qbExpand3((a && b) || (a && b));
   helib::QueryBuilder qbComplex1(a || (!b && c));
-  // helib::QueryBuilder qbComplex2(((!b && c) || (!a))); //<- ambiguous, not
-  // sure how to resolve
+  helib::QueryBuilder qbComplex2(((!b && c) || (!a)));
   helib::QueryBuilder qbComplex3((a && !b));
-  std::cout << "query a:\n";
+  helib::QueryBuilder qbNotofOr1(!(a||b||c));
+  helib::QueryBuilder qbNotofOr2(!(a||b) && c);
+  helib::QueryBuilder qbdoubleNot1(!!a);
+  helib::QueryBuilder qbdoubleNot2(b || !!a);
+  helib::QueryBuilder qbNotofAnd1(!(a && b && c));
+  helib::QueryBuilder qbNotofAnd2(!((a || b)&&(b || c)));
+
+  /**std::cout << "query a:\n";
   helib::Query_t querya = qba.build(database.columns());
   std::cout << "query not a:\n";
   helib::Query_t querynota = qbNota.build(database.columns());
@@ -129,15 +135,33 @@ int main(int argc, char* argv[])
   helib::Query_t queryExpand1 = qbExpand1.build(database.columns());
   std::cout << "query (a or b) and c:\n";
   helib::Query_t queryExpand2 = qbExpand2.build(database.columns());
+  std::cout << "query (a and b) or (a and b):\n";
+  helib::Query_t queryExpand3 = qbExpand3.build(database.columns());
   std::cout << "query a or (!b and c):\n";
-
   helib::Query_t queryComplex1 = qbComplex1.build(database.columns());
+  std::cout << "query (!b and c) or !a:\n";
+  helib::Query_t queryComplex2 = qbComplex2.build(database.columns());
   std::cout << "query a and !b:\n";
-  helib::Query_t queryComplex3 = qbComplex3.build(database.columns());
+  helib::Query_t queryComplex3 = qbComplex3.build(database.columns());**/
+  std:: cout << "query not(a or b or c):\n";
+  helib::Query_t queryNotofOr1 = qbNotofOr1.build(database.columns());
+  std:: cout << "query not(a or b) and c:\n";
+  helib::Query_t queryNotofOr2 = qbNotofOr2.build(database.columns());
+  std:: cout << "query not not a:\n";
+  helib::Query_t querydoubleNot1 = qbdoubleNot1.build(database.columns());
+  std:: cout << "query b or not not a:\n";
+  helib::Query_t querydoubleNot2 = qbdoubleNot2.build(database.columns());
+  std:: cout << "query not (a and b and c):\n";
+  helib::Query_t queryNotofAnd1 = qbNotofAnd1.build(database.columns());
+  std:: cout << "query not ((a or b) and (b or c)):\n";
+  //bug with duplicates in CNF still get added to offset
+  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());
   HELIB_NTIMER_STOP(buildQuery);
 
-  HELIB_NTIMER_START(lookupSamea);
+  
   auto clean = [](auto& x) { x.cleanUp(); };
+
+  /*HELIB_NTIMER_START(lookupSamea);
   auto matcha = database.contains(querya, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupSamea);
 
@@ -169,17 +193,50 @@ int main(int argc, char* argv[])
   auto matchExpand2 = database.contains(queryExpand2, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupExpand2);
 
+  HELIB_NTIMER_START(lookupExpand3);
+  auto matchExpand3 = database.contains(queryExpand2, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupExpand3);
+
   HELIB_NTIMER_START(lookupComplex1);
   auto matchcomplex1 = database.contains(queryComplex1, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupComplex1);
 
+  HELIB_NTIMER_START(lookupComplex2);
+  auto matchcomplex2 = database.contains(queryComplex1, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupComplex2);
+
   HELIB_NTIMER_START(lookupComplex3);
   auto matchcomplex3 = database.contains(queryComplex3, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupComplex3);
+  HELIB_NTIMER_STOP(lookupComplex3);*/
+
+  HELIB_NTIMER_START(lookupNotofOr1);
+  auto NotofOr1 = database.contains(queryNotofOr1, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupNotofOr1);
+
+  HELIB_NTIMER_START(lookupNotofOr2);
+  auto NotofOr2 = database.contains(queryNotofOr2, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupNotofOr2);
+
+  HELIB_NTIMER_START(lookupdoubleNot1);
+  auto doubleNot1 = database.contains(querydoubleNot1, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupdoubleNot1);
+
+  HELIB_NTIMER_START(lookupdoubleNot2);
+  auto doubleNot2 = database.contains(querydoubleNot2, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupdoubleNot2);
+
+  HELIB_NTIMER_START(lookupNotofAnd1);
+  auto NotofAnd1 = database.contains(queryNotofAnd1, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupNotofAnd1);
+
+  HELIB_NTIMER_START(lookupNotofAnd2);
+  auto NotofAnd2 = database.contains(queryNotofAnd2, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupNotofAnd2);
+
 
   HELIB_NTIMER_START(writeResults);
   // Write results to file
-  writeResultsToFile(cmdLineOpts.outFilePath + "_a",
+  /**writeResultsToFile(cmdLineOpts.outFilePath + "_a",
                      matcha,
                      cmdLineOpts.offset);
   writeResultsToFile(cmdLineOpts.outFilePath + "_!a",
@@ -203,14 +260,39 @@ int main(int argc, char* argv[])
   writeResultsToFile(cmdLineOpts.outFilePath + "_expand2",
                      matchExpand2,
                      cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_expand3",
+                     matchExpand3,
+                     cmdLineOpts.offset);                   
   writeResultsToFile(cmdLineOpts.outFilePath + "_aOr_!bAndc",
                      matchcomplex1,
                      cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_!bAndc_Or_!a",
+                     matchcomplex2,
+                     cmdLineOpts.offset);                   
   writeResultsToFile(cmdLineOpts.outFilePath + "_aAnd!b",
                      matchcomplex3,
                      cmdLineOpts.offset);
+  **/
+  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr1",
+                     NotofOr1,
+                     cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr2",
+                     NotofOr2,
+                     cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_doubleNot1",
+                     doubleNot1,
+                     cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_doubleNot2",
+                     doubleNot2,
+                     cmdLineOpts.offset);  
+  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofAnd1",
+                     NotofAnd1,
+                     cmdLineOpts.offset);    
+  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofAnd2",
+                     NotofAnd2,
+                     cmdLineOpts.offset);                                   
   HELIB_NTIMER_STOP(writeResults);
-
+  
   std::ofstream timers("times.log");
   if (timers.is_open()) {
     helib::printAllTimers(timers);
