@@ -525,6 +525,38 @@ private:
     return std::all_of(s.begin(), s.end(), ::isdigit);
   }
 
+  vecvec negate(const vecvec &clause) const
+  {
+    // use de Morgan's law to negate a clause which is an and of ors and return another and of ors
+    vecvec notclause;
+    // clause[0] = {{a,b,c,...}}. Negate this, to give {{-a},{-b},{-c},...}
+    // TO: if this is an "empty" clause, what will happen? Empty clause -> badly formed query
+    for (int i = 0; i < clause[0].size(); i++)
+      notclause.push_back({-1 * clause[0][i]});
+    for (int i = 1; i < clause.size(); i++)
+    {
+      // first negate second clause
+      vecvec secondclause;
+      for (int j = 0; j < clause[i].size(); j++){
+        secondclause.push_back({-1 * clause[i][j]});
+      }
+      vecvec notclausetemp;
+      notclausetemp.reserve(secondclause.size()*notclause.size());
+      // then Cartesian style product
+      for (auto j : notclause)
+      {
+        for (auto k : secondclause)
+        {
+          std::vector<long> x = j;
+          x.insert(x.end(), k.begin(), k.end());
+          notclausetemp.push_back(x);
+        }
+      }
+      notclause = notclausetemp;
+    }
+    return notclause;
+  }
+
   vecvec expandOr(const std::string& s) const
   {
     std::stack<vecvec> convertStack;
@@ -561,8 +593,10 @@ private:
       } 
       else if (!symbol.compare("!"))
         {
-          // top of the stack should be of the form [(i),...]. Change to (-i).
-          convertStack.top()[0][0] *= -1;
+          vecvec top = convertStack.top();
+          vecvec clause = negate(top); // negate top of stack
+          convertStack.pop();          // pop
+          convertStack.push(clause);   // push negation
         }else {
         // Assume it is a number. But sanity check anyway.
         assertTrue(isNumber(symbol),
