@@ -465,41 +465,10 @@ public:
   {
 
     // Convert the query to "type 1" by expanding out necessary ORs
-    vecvec expr =
-        expandOr(query_str); // to allow for zero ordering, (i+1) corresponds to
-                             // i, negatives correspond to not
-    bool containsOR = false;
-
-    vecvec Fs(expr.size());
-    {
-      std::vector<long> v(columns);
-      std::iota(v.begin(), v.end(), 0);
-      std::fill(Fs.begin(), Fs.end(), v);
-    }
-    std::vector<long> mus(expr.size(), 1);
-    std::vector<Matrix<long>> taus;
-    taus.reserve(expr.size());
-
-    // Create the taus
-    for (long i = 0; i < long(expr.size()); ++i) { // Each tau
-      mus[i] = 0;                                  // Set mu to zero.
-      Matrix<long> M(columns, 1);                  // Create temp tau matrix
-      containsOR = (expr[i].size() > 1) ? true : false;
-      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
-      {
-        if (expr[i][j] < 0 &&
-            (M(abs(expr[i][j]) - 1, 0) >=
-             0)) // add one to the offset for each not: second condition to
-                 // remedy case where column appears twice in one clause
-          mus[i] += 1;
-        M(abs(expr[i][j]) - 1, 0) =
-            (expr[i][j] >= 0) ? 1
-                              : -1; // mark "not" columns as -1, columns as 1
-      }
-      taus.push_back(std::move(M));
-    }
-
-    return Query_t(std::move(Fs), std::move(mus), std::move(taus), containsOR);
+    // to allow for zero ordering, (i+1) corresponds to i, negatives 
+    // correspond to not
+    vecvec expr = expandOr(query_str); 
+    return this->buildWeights(expr,columns);    
   }
 
 private:
@@ -530,7 +499,39 @@ private:
     // Positive only
     return std::all_of(s.begin(), s.end(), ::isdigit);
   }
+  Query_t buildWeights(const vecvec& expr, const long columns) const
+  {
+    bool containsOR = false;
 
+    vecvec Fs(expr.size());
+    {
+      std::vector<long> v(columns);
+      std::iota(v.begin(), v.end(), 0);
+      std::fill(Fs.begin(), Fs.end(), v);
+    }
+    std::vector<long> mus(expr.size(), 1);
+    std::vector<Matrix<long>> taus;
+    taus.reserve(expr.size());
+
+    // Create the taus
+    for (long i = 0; i < long(expr.size()); ++i) { // Each tau
+      mus[i] = 0;                                  // Set mu to zero.
+      Matrix<long> M(columns, 1);                  // Create temp tau matrix
+      containsOR = (expr[i].size() > 1) ? true : false;
+      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
+      {
+        // add one to the offset for each not: second condition to
+        // remedy case where column appears twice in one clause
+        if (expr[i][j] < 0 && (M(abs(expr[i][j]) - 1, 0) >= 0)) 
+          mus[i] += 1;
+        // mark "not" columns as -1, columns as 1
+        M(abs(expr[i][j]) - 1, 0) += (expr[i][j] >= 0) ? 1 : -1; 
+      }
+      taus.push_back(std::move(M));
+    }
+
+    return Query_t(std::move(Fs), std::move(mus), std::move(taus), containsOR);
+  }
   vecvec negate(const vecvec& clause) const
   {
     // use de Morgan's law to negate a clause which is an and of ors and return
