@@ -100,16 +100,16 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
   if constexpr (std::is_same_v<TXT, Ptxt<BGV>>) {
     auto tmp = database.deepCopy();
     (tmp -= mask)
-      .apply([&](auto& entry) { mapTo01(ea, entry); })
-      .apply([](auto& entry) { entry.negate(); })
-      .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
+        .apply([&](auto& entry) { mapTo01(ea, entry); })
+        .apply([](auto& entry) { entry.negate(); })
+        .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
 
     return tmp;
   } else { // Ctxt Query
     (mask -= database)
-      .apply([&](auto& entry) { mapTo01(ea, entry); })
-      .apply([](auto& entry) { entry.negate(); })
-      .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
+        .apply([&](auto& entry) { mapTo01(ea, entry); })
+        .apply([](auto& entry) { entry.negate(); })
+        .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
 
     return mask;
   }
@@ -247,33 +247,29 @@ private:
   int column;
 };
 
-
 /**
-* @class Not
-* @brief An object representing the logical NOT expression which inherits from
-* `Expr`.
-**/
+ * @class Not
+ * @brief An object representing the logical NOT expression which inherits from
+ * `Expr`.
+ **/
 class Not : public Expr
 {
 public:
   /**
-  * @brief Function for returning the logical NOT expression where the NOT
-  * operation is represented by `-` and each operand * is a column number.
-  * @return A string representing the NOT expression, where i- is not column i
-  **/
-  std::string eval() const override
-  {
-      return p->eval() + " !";
-  }
+   * @brief Function for returning the logical NOT expression where the NOT
+   * operation is represented by `-` and each operand * is a column number.
+   * @return A string representing the NOT expression, where i- is not column i
+   **/
+  std::string eval() const override { return p->eval() + " !"; }
   /**
-  * @brief Constructor.
-  * @param p The operand of the expression.
-  **/
-  Not(const QueryExpr &exp) : p(exp) {}
+   * @brief Constructor.
+   * @param p The operand of the expression.
+   **/
+  Not(const QueryExpr& exp) : p(exp) {}
 
 private:
   QueryExpr p;
-  };
+};
 
 /**
  * @class And
@@ -340,12 +336,12 @@ private:
 };
 
 /**
-* @brief Overloaded operator for creating a shared pointer to a NOT
-* expression.
-* @param p operand of the NOT expression.
-* @return Shared pointer to the class `Not`.
-**/
-inline std::shared_ptr<Not> operator!(const QueryExpr &p)
+ * @brief Overloaded operator for creating a shared pointer to a NOT
+ * expression.
+ * @param p operand of the NOT expression.
+ * @return Shared pointer to the class `Not`.
+ **/
+inline std::shared_ptr<Not> operator!(const QueryExpr& p)
 {
   return std::make_shared<Not>(p);
 }
@@ -420,7 +416,8 @@ struct Query_t
           const std::vector<Matrix<long>>& weights,
           const bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 
   /**
    * @brief Constructor.
@@ -435,7 +432,8 @@ struct Query_t
           std::vector<Matrix<long>>&& weights,
           bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 };
 
 /**
@@ -467,7 +465,9 @@ public:
   {
 
     // Convert the query to "type 1" by expanding out necessary ORs
-    vecvec expr = expandOr(query_str); // to allow for zero ordering, (i+1) corresponds to i, negatives correspond to not
+    vecvec expr =
+        expandOr(query_str); // to allow for zero ordering, (i+1) corresponds to
+                             // i, negatives correspond to not
     bool containsOR = false;
 
     vecvec Fs(expr.size());
@@ -485,12 +485,16 @@ public:
       mus[i] = 0;                                  // Set mu to zero.
       Matrix<long> M(columns, 1);                  // Create temp tau matrix
       containsOR = (expr[i].size() > 1) ? true : false;
-      for (long j = 0; j < long(expr[i].size()); ++j)   // Each column index
-        {
-          if (expr[i][j] < 0 &&(M(abs(expr[i][j]) - 1, 0)>=0)) // add one to the offset for each not: second condition to remedy case where column appears twice in one clause
-            mus[i] += 1;
-          M(abs(expr[i][j]) - 1, 0) = (expr[i][j] >= 0)? 1 : -1; // mark "not" columns as -1, columns as 1
-                        
+      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
+      {
+        if (expr[i][j] < 0 &&
+            (M(abs(expr[i][j]) - 1, 0) >=
+             0)) // add one to the offset for each not: second condition to
+                 // remedy case where column appears twice in one clause
+          mus[i] += 1;
+        M(abs(expr[i][j]) - 1, 0) =
+            (expr[i][j] >= 0) ? 1
+                              : -1; // mark "not" columns as -1, columns as 1
       }
       taus.push_back(std::move(M));
     }
@@ -527,28 +531,25 @@ private:
     return std::all_of(s.begin(), s.end(), ::isdigit);
   }
 
-  vecvec negate(const vecvec &clause) const
+  vecvec negate(const vecvec& clause) const
   {
-    // use de Morgan's law to negate a clause which is an and of ors and return another and of ors
+    // use de Morgan's law to negate a clause which is an and of ors and return
+    // another and of ors
     vecvec notclause;
     // clause[0] = {{a,b,c,...}}. Negate this, to give {{-a},{-b},{-c},...}
-    // TO: if this is an "empty" clause, what will happen? Empty clause -> badly formed query
-    for (int i = 0; i < clause[0].size(); i++)
-      notclause.push_back({-1 * clause[0][i]});
-    for (int i = 1; i < clause.size(); i++)
-    {
+    for (auto& i : clause[0])
+      notclause.push_back({-1 * i});
+    for (int i = 1; i < clause.size(); i++) {
       // first negate second clause
       vecvec secondclause;
-      for (int j = 0; j < clause[i].size(); j++){
-        secondclause.push_back({-1 * clause[i][j]});
+      for (auto& j : clause[i]) {
+        secondclause.push_back({-1 * i});
       }
       vecvec notclausetemp;
-      notclausetemp.reserve(secondclause.size()*notclause.size());
+      notclausetemp.reserve(secondclause.size() * notclause.size());
       // then Cartesian style product
-      for (auto j : notclause)
-      {
-        for (auto k : secondclause)
-        {
+      for (auto& j : notclause) {
+        for (auto& k : secondclause) {
           std::vector<long> x = j;
           x.insert(x.end(), k.begin(), k.end());
           notclausetemp.push_back(x);
@@ -559,33 +560,32 @@ private:
     return notclause;
   }
 
-  vecvec Tidy(const vecvec expr) const
+  vecvec tidy(const vecvec expr) const
   {
     vecvec x;
-    for(auto y : expr){
+    for (auto& y : expr) {
       auto z = tidyclause(y);
-      if(z.size() != 0)
+      if (z.size() != 0)
         x.push_back(z);
     }
     return x;
   }
 
-  std::vector<long> tidyclause(const std::vector<long> clause) const
+  std::vector<long> tidyClause(const std::vector<long> clause) const
   {
     std::unordered_set<long> vars;
     std::vector<long> newclause1;
-    for(auto i : clause){
-      if(vars.find(i)==vars.end()){
+    for (auto& i : clause) {
+      if (vars.find(i) == vars.end()) {
         newclause1.push_back(i);
         vars.insert(i);
-        }
-      else{
+      } else {
         continue;
       }
     }
     std::vector<long> newclause2;
-    for(auto i : newclause1){
-      if(vars.find(-1*i)==vars.end())
+    for (auto& i : newclause1) {
+      if (vars.find(-1 * i) == vars.end())
         newclause2.push_back(i);
     }
     return newclause2;
@@ -624,18 +624,17 @@ private:
           }
 
         convertStack.push(std::move(prod));
-      } 
-      else if (!symbol.compare("!"))
-        {
-          vecvec top = convertStack.top();
-          vecvec clause = negate(top); // negate top of stack
-          convertStack.pop();          // pop
-          convertStack.push(clause);   // push negation
-        }else {
+      } else if (!symbol.compare("!")) {
+        vecvec top = convertStack.top();
+        vecvec clause = negate(top); // negate top of stack
+        convertStack.pop();          // pop
+        convertStack.push(clause);   // push negation
+      } else {
         // Assume it is a number. But sanity check anyway.
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
-        convertStack.emplace(vecvec(1, {std::stol(symbol) + 1}));//using 1 ordering temporarily
+        convertStack.emplace(
+            vecvec(1, {std::stol(symbol) + 1})); // using 1 ordering temporarily
       }
     }
 
@@ -644,7 +643,7 @@ private:
                          convertStack.size(),
                          "Size of stack after expandOr should be 1");
 
-    return Tidy(convertStack.top());
+    return this->tidy(convertStack.top());
   }
 };
 
@@ -669,7 +668,8 @@ public:
    **/
   Database(const Matrix<TXT>& M, std::shared_ptr<const Context> c) :
       data(M), context(c)
-  {}
+  {
+  }
 
   // FIXME: Should this option really exist?
   /**
@@ -683,7 +683,8 @@ public:
   Database(const Matrix<TXT>& M, const Context& c) :
       data(M),
       context(std::shared_ptr<const helib::Context>(&c, [](auto UNUSED p) {}))
-  {}
+  {
+  }
 
   // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
   /**
@@ -730,9 +731,8 @@ private:
 
 template <typename TXT>
 template <typename TXT2>
-inline auto Database<TXT>::contains(
-    const Query_t& lookup_query,
-    const Matrix<TXT2>& query_data) const
+inline auto Database<TXT>::contains(const Query_t& lookup_query,
+                                    const Matrix<TXT2>& query_data) const
 {
   auto result = getScore<TXT2>(lookup_query, query_data);
 
@@ -749,9 +749,8 @@ inline auto Database<TXT>::contains(
 
 template <typename TXT>
 template <typename TXT2>
-inline auto Database<TXT>::getScore(
-    const Query_t& weighted_query,
-    const Matrix<TXT2>& query_data) const
+inline auto Database<TXT>::getScore(const Query_t& weighted_query,
+                                    const Matrix<TXT2>& query_data) const
 {
   auto mask = calculateMasks(context->getEA(), query_data, this->data);
 
