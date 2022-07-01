@@ -465,10 +465,11 @@ public:
   {
 
     // Convert the query to "type 1" by expanding out necessary ORs
-    // to allow for zero ordering, (i+1) corresponds to i, negatives 
+    // to allow for zero ordering, (i+1) corresponds to i, negatives
     // correspond to not
-    vecvec expr = expandOr(query_str); 
-    return this->buildWeights(expr,columns);    
+    vecvec expr = expandOr(query_str);
+    this->tidy(expr);
+    return this->buildWeights(expr, columns);
   }
 
 private:
@@ -522,10 +523,10 @@ private:
       {
         // add one to the offset for each not: second condition to
         // remedy case where column appears twice in one clause
-        if (expr[i][j] < 0 && (M(abs(expr[i][j]) - 1, 0) >= 0)) 
+        if (expr[i][j] < 0 && (M(abs(expr[i][j]) - 1, 0) >= 0))
           mus[i] += 1;
         // mark "not" columns as -1, columns as 1
-        M(abs(expr[i][j]) - 1, 0) += (expr[i][j] >= 0) ? 1 : -1; 
+        M(abs(expr[i][j]) - 1, 0) += (expr[i][j] >= 0) ? 1 : -1;
       }
       taus.push_back(std::move(M));
     }
@@ -561,18 +562,25 @@ private:
     return notclause;
   }
 
-  vecvec tidy(const vecvec expr) const
+  /*
+  Performs the following optimisations in place:
+  - delete duplicate variables from each inner clause
+  - delete variable and negation when both appear in an inner clause
+  */
+  void tidy(vecvec& expr) const
   {
     vecvec x;
     for (auto& y : expr) {
-      auto z = tidyclause(y);
-      if (z.size() != 0)
-        x.push_back(z);
+      tidyClause(y);
+      if (y.size() != 0)
+        x.push_back(y);
     }
-    return x;
+    expr = x;
   }
-
-  std::vector<long> tidyClause(const std::vector<long> clause) const
+  /*
+  tidies an inner clause in place
+  */
+  void tidyClause(std::vector<long>& clause) const
   {
     std::unordered_set<long> vars;
     std::vector<long> newclause1;
@@ -584,12 +592,11 @@ private:
         continue;
       }
     }
-    std::vector<long> newclause2;
+    clause.clear();
     for (auto& i : newclause1) {
       if (vars.find(-1 * i) == vars.end())
-        newclause2.push_back(i);
+        clause.push_back(i);
     }
-    return newclause2;
   }
 
   vecvec expandOr(const std::string& s) const
@@ -644,7 +651,7 @@ private:
                          convertStack.size(),
                          "Size of stack after expandOr should be 1");
 
-    return this->tidy(convertStack.top());
+    return std::move(convertStack.top());
   }
 };
 
