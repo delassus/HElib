@@ -100,120 +100,26 @@ int main(int argc, char* argv[])
   const helib::QueryExpr& b = helib::makeQueryExpr(1);
   const helib::QueryExpr& c = helib::makeQueryExpr(2);
 
-  helib::QueryBuilder qba(a);
-  helib::QueryBuilder qbNota(!a);
-  helib::QueryBuilder qbb(b);
-  helib::QueryBuilder qbc(c);
-  helib::QueryBuilder qbAnd(a && b);
-  helib::QueryBuilder qbOr(a || b);
-  helib::QueryBuilder qbExpand1(a || (b && c));
-  helib::QueryBuilder qbExpand2((a || b) && c);
-  helib::QueryBuilder qbExpand3((a && b) || (a && b));
-  helib::QueryBuilder qbComplex1(a || (!b && c));
-  helib::QueryBuilder qbComplex2(((!b && c) || (!a)));
-  helib::QueryBuilder qbComplex3((a && !b));
-  helib::QueryBuilder qbdoublevars(a || !a);
+  helib::QueryBuilder qbDoubleVars(a || !a);
   helib::QueryBuilder qbNotofOr1(!(a||b||c));
   helib::QueryBuilder qbNotofOr2(!(a||b) && c);
-  helib::QueryBuilder qbdoubleNot1(!!a);
-  helib::QueryBuilder qbdoubleNot2(b || !!a);
+  helib::QueryBuilder qbDoubleNot1(!!a);
+  helib::QueryBuilder qbDoubleNot2(b || !!a);
   helib::QueryBuilder qbNotofAnd1(!(a && b && c));
   helib::QueryBuilder qbNotofAnd2(!((a || b)&&(b || c)));
 
-  /**std::cout << "query a:\n";
-  helib::Query_t querya = qba.build(database.columns());
-  std::cout << "query not a:\n";
-  helib::Query_t querynota = qbNota.build(database.columns());
-  std::cout << "query b:\n";
-  helib::Query_t queryb = qbb.build(database.columns());
-  std::cout << "query c:\n";
-  helib::Query_t queryc = qbc.build(database.columns());
-  std::cout << "query a and b:\n";
-  helib::Query_t queryAnd = qbAnd.build(database.columns());
-  std::cout << "query a or b:\n";
-  helib::Query_t queryOr = qbOr.build(database.columns());
-  std::cout << "query a or (b and c):\n";
-  helib::Query_t queryExpand1 = qbExpand1.build(database.columns());
-  std::cout << "query (a or b) and c:\n";
-  helib::Query_t queryExpand2 = qbExpand2.build(database.columns());
-  std::cout << "query (a and b) or (a and b):\n";
-  helib::Query_t queryExpand3 = qbExpand3.build(database.columns());
-  std::cout << "query a or (!b and c):\n";
-  helib::Query_t queryComplex1 = qbComplex1.build(database.columns());
-  std::cout << "query (!b and c) or !a:\n";
-  helib::Query_t queryComplex2 = qbComplex2.build(database.columns());
-  std::cout << "query a and !b:\n";
-  helib::Query_t queryComplex3 = qbComplex3.build(database.columns());**/
-  std:: cout << "query nota or a:\n";
-  helib::Query_t querydoublevars = qbdoublevars.build(database.columns());
-  std:: cout << "query not(a or b or c):\n";
+  helib::Query_t queryDoubleVars = qbDoubleVars.build(database.columns());
   helib::Query_t queryNotofOr1 = qbNotofOr1.build(database.columns());
-  std:: cout << "query not(a or b) and c:\n";
   helib::Query_t queryNotofOr2 = qbNotofOr2.build(database.columns());
-  std:: cout << "query not not a:\n";
-  helib::Query_t querydoubleNot1 = qbdoubleNot1.build(database.columns());
-  std:: cout << "query b or not not a:\n";
-  helib::Query_t querydoubleNot2 = qbdoubleNot2.build(database.columns());
-  std:: cout << "query not (a and b and c):\n";
+  helib::Query_t queryDoubleNot1 = qbDoubleNot1.build(database.columns());
+  helib::Query_t queryDoubleNot2 = qbDoubleNot2.build(database.columns());
   helib::Query_t queryNotofAnd1 = qbNotofAnd1.build(database.columns());
-  std:: cout << "query not ((a or b) and (b or c)):\n";
-  //bug with duplicates in CNF still get added to offset
-  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());
-  HELIB_NTIMER_STOP(buildQuery);
+  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());         
 
-  
   auto clean = [](auto& x) { x.cleanUp(); };
-
-  /*HELIB_NTIMER_START(lookupSamea);
-  auto matcha = database.contains(querya, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupSamea);
-
-  HELIB_NTIMER_START(lookupNot);
-  auto matchnota = database.contains(querynota, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupNot);
-
-  HELIB_NTIMER_START(lookupSameb);
-  auto matchb = database.contains(queryb, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupSameb);
-
-  HELIB_NTIMER_START(lookupSamec);
-  auto matchc = database.contains(queryc, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupSamec);
-
-  HELIB_NTIMER_START(lookupAnd);
-  auto matchAnd = database.contains(queryAnd, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupAnd);
-
-  HELIB_NTIMER_START(lookupOr);
-  auto matchOr = database.contains(queryOr, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupOr);
-
-  HELIB_NTIMER_START(lookupExpand1);
-  auto matchExpand1 = database.contains(queryExpand1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupExpand1);
-
-  HELIB_NTIMER_START(lookupExpand2);
-  auto matchExpand2 = database.contains(queryExpand2, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupExpand2);
-
-  HELIB_NTIMER_START(lookupExpand3);
-  auto matchExpand3 = database.contains(queryExpand2, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupExpand3);
-
-  HELIB_NTIMER_START(lookupComplex1);
-  auto matchcomplex1 = database.contains(queryComplex1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupComplex1);
-
-  HELIB_NTIMER_START(lookupComplex2);
-  auto matchcomplex2 = database.contains(queryComplex1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupComplex2);
-
-  HELIB_NTIMER_START(lookupComplex3);
-  auto matchcomplex3 = database.contains(queryComplex3, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupComplex3);*/
-
+  
   HELIB_NTIMER_START(lookupdoublevars);
-  auto doublevars = database.contains(querydoublevars, queryData).apply(clean);
+  auto doubleVars = database.contains(queryDoubleVars, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupdoublevars);
   
   HELIB_NTIMER_START(lookupNotofOr1);
@@ -225,11 +131,11 @@ int main(int argc, char* argv[])
   HELIB_NTIMER_STOP(lookupNotofOr2);
 
   HELIB_NTIMER_START(lookupdoubleNot1);
-  auto doubleNot1 = database.contains(querydoubleNot1, queryData).apply(clean);
+  auto doubleNot1 = database.contains(queryDoubleNot1, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupdoubleNot1);
 
   HELIB_NTIMER_START(lookupdoubleNot2);
-  auto doubleNot2 = database.contains(querydoubleNot2, queryData).apply(clean);
+  auto doubleNot2 = database.contains(queryDoubleNot2, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupdoubleNot2);
 
   HELIB_NTIMER_START(lookupNotofAnd1);
@@ -240,48 +146,11 @@ int main(int argc, char* argv[])
   auto NotofAnd2 = database.contains(queryNotofAnd2, queryData).apply(clean);
   HELIB_NTIMER_STOP(lookupNotofAnd2);
 
-
   HELIB_NTIMER_START(writeResults);
   // Write results to file
-  /**writeResultsToFile(cmdLineOpts.outFilePath + "_a",
-                     matcha,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_!a",
-                     matchnota,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_b",
-                     matchb,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_c",
-                     matchc,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_and",
-                     matchAnd,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_or",
-                     matchOr,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_expand1",
-                     matchExpand1,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_expand2",
-                     matchExpand2,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_expand3",
-                     matchExpand3,
-                     cmdLineOpts.offset);                   
-  writeResultsToFile(cmdLineOpts.outFilePath + "_aOr_!bAndc",
-                     matchcomplex1,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_!bAndc_Or_!a",
-                     matchcomplex2,
-                     cmdLineOpts.offset);                   
-  writeResultsToFile(cmdLineOpts.outFilePath + "_aAnd!b",
-                     matchcomplex3,
-                     cmdLineOpts.offset);
-  **/
+  
   writeResultsToFile(cmdLineOpts.outFilePath + "_doublevars",
-                     doublevars,
+                     doubleVars,
                      cmdLineOpts.offset);
   writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr1",
                      NotofOr1,
