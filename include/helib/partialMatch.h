@@ -464,13 +464,49 @@ public:
   Query_t build(long columns) const
   {
 
-    // Convert the query to "type 1" by expanding out necessary ORs
+    // First onvert the query to "type 1" by expanding out necessary ORs
     // to allow for zero ordering, (i+1) corresponds to i, negatives
     // correspond to not
     vecvec expr = expandOr(query_str);
+    // then eliminate duplicates from inner clauses
     this->tidy(expr);
+    // lastly form weights
     return this->buildWeights(expr, columns);
   }
+  void removeOr()
+  {
+    std::stack<std::string> convertStack;
+
+    std::istringstream input{query_str};
+    std::string symbol;
+    while (input >> symbol) {
+      if (!symbol.compare("&&")) {
+        auto rhs = convertStack.top();
+        convertStack.pop();
+        auto& lhs = convertStack.top();
+        lhs += " " + rhs + " &&";
+      } else if (!symbol.compare("||")) {
+        auto rhs = convertStack.top();
+        convertStack.pop();
+        auto& lhs = convertStack.top();
+        lhs += " !" + rhs + " ! && !";
+      } else if (!symbol.compare("!")) {
+        convertStack.top() += " !";
+      } else {
+        // Should be a number
+        assertTrue(isNumber(symbol),
+                   "String is not a number: '" + symbol + "'");
+        convertStack.push(" " + symbol);
+      }
+    }
+    assertEq<LogicError>(1UL,
+                         convertStack.size(),
+                         "Size of stack after removeOr should be 1");
+    query_str = std::move(convertStack.top());
+  }
+
+  //function to return query_str
+  std::string getQueryString() const { return query_str; }
 
 private:
   std::string query_str;
@@ -500,6 +536,7 @@ private:
     // Positive only
     return std::all_of(s.begin(), s.end(), ::isdigit);
   }
+  
   Query_t buildWeights(const vecvec& expr, const long columns) const
   {
     bool containsOR = false;
@@ -530,28 +567,25 @@ private:
       }
       taus.push_back(std::move(M));
     }
-
     return Query_t(std::move(Fs), std::move(mus), std::move(taus), containsOR);
   }
+  
   vecvec negate(const vecvec& clause) const
   {
     // use de Morgan's law to negate a clause which is an and of ors and return
     // another and of ors
-    vecvec notclause;
-    // clause[0] = {{a,b,c,...}}. Negate this, to give {{-a},{-b},{-c},...}
-    for (auto& i : clause[0])
-      notclause.push_back({-1 * i});
-    for (int i = 1; i < clause.size(); i++) {
-      // first negate second clause
-      vecvec secondclause;
+    vecvec notclause = {{}};    
+    for (int i = 0; i < clause.size(); i++) {
+      // clause[i] = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
+      vecvec nextclause;
       for (auto& j : clause[i]) {
-        secondclause.push_back({-1 * i});
+        nextclause.push_back({-1 * j});
       }
       vecvec notclausetemp;
-      notclausetemp.reserve(secondclause.size() * notclause.size());
+      notclausetemp.reserve(nextclause.size() * notclause.size());
       // then Cartesian style product
-      for (auto& j : notclause) {
-        for (auto& k : secondclause) {
+      for (const auto& j : notclause) {
+        for (const auto& k : nextclause) {
           std::vector<long> x = j;
           x.insert(x.end(), k.begin(), k.end());
           notclausetemp.push_back(x);
@@ -583,17 +617,17 @@ private:
   void tidyClause(std::vector<long>& clause) const
   {
     std::unordered_set<long> vars;
-    std::vector<long> newclause1;
+    std::vector<long> newclause;
     for (auto& i : clause) {
       if (vars.find(i) == vars.end()) {
-        newclause1.push_back(i);
+        newclause.push_back(i);
         vars.insert(i);
       } else {
         continue;
       }
     }
     clause.clear();
-    for (auto& i : newclause1) {
+    for (auto& i : newclause) {
       if (vars.find(-1 * i) == vars.end())
         clause.push_back(i);
     }
@@ -693,11 +727,25 @@ public:
       context(std::shared_ptr<const helib::Context>(&c, [](auto UNUSED p) {}))
   {
   }
+  // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
+  /**
+   * @brief Overloaded function for performing a database lookup given a query
+   *  expression and query data.
+   * @tparam TXT2 The type of the query data, can be either a `Ctxt` or
+   * `Ptxt<BGV>`.
+   * @param lookup_query The lookup query expression to perform.
+   * @param query_data The lookup query data to compare with the database.
+   * @return A `Matrix<TXT2>` containing 1s and 0s in slots where there was a
+   * match or no match respectively.
+   **/
+  template <typename TXT2>
+  auto contains(const QueryBuilder& lookup_query,
+                const Matrix<TXT2>& query_data) const;
 
   // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
   /**
-   * @brief Function for performing a database lookup given a query expression
-   * and query data.
+   * @brief Overloaded function for performing a database lookup given a query
+   *  expression and query data.
    * @tparam TXT2 The type of the query data, can be either a `Ctxt` or
    * `Ptxt<BGV>`.
    * @param lookup_query The lookup query expression to perform.
@@ -735,7 +783,53 @@ public:
 private:
   Matrix<TXT> data;
   std::shared_ptr<const Context> context;
+  bool isNumber(const std::string& s) const
+  {
+    // Positive only
+    return std::all_of(s.begin(), s.end(), ::isdigit);
+  }
 };
+template <typename TXT>
+template <typename TXT2>
+inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
+                                    const Matrix<TXT2>& query_data) const
+{
+  auto mask = calculateMasks(context->getEA(), query_data, this->data);
+
+  std::istringstream input(lookup_query.getQueryString());
+
+  // this is the type declared for result in getScore
+  std::stack<Matrix<TXT>> ctxtStack;
+  std::string symbol;
+
+  while (input >> symbol) {
+    if (!symbol.compare("!")) {
+      auto& top = ctxtStack.top();
+      top.apply([&](auto& entry) { entry.negate(); });
+      top.apply([&](auto& entry) { entry.addConstant(NTL::ZZX(1L)); });
+    } else if (!symbol.compare("&&")) {
+      auto rhs = ctxtStack.top();
+      ctxtStack.pop();
+      auto& lhs = ctxtStack.top();
+      lhs.template entrywiseOperation<TXT>(
+          rhs,
+          [](auto& l, const auto& r) -> decltype(auto) {
+            l.multiplyBy(r);
+            return l;
+          });
+    } else {
+      // Verify symbol is a number
+      assertTrue(isNumber(symbol), "String is not a number: '" + symbol + "'");
+      // push a copy of mask[symbol]
+      Matrix<TXT> col = mask.columns({std::stol(symbol)}).deepCopy();
+      ctxtStack.push(col);
+    }
+  }
+  assertEq<LogicError>(1UL,
+                       ctxtStack.size(),
+                       "Size of stack after evaluation should be 1");
+  return std::move(ctxtStack.top());
+}
 
 template <typename TXT>
 template <typename TXT2>
