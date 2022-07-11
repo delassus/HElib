@@ -794,12 +794,17 @@ template <typename TXT2>
 inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
                                     const Matrix<TXT2>& query_data) const
 {
+  // resolve type names: if both are ptxt, return ptxt, otherwise return ctxt
+  using RTXT = typename std::conditional<(std::is_same_v<TXT, Ptxt<BGV>>)&&(
+                                             std::is_same_v<TXT2, Ptxt<BGV>>),
+                                         Ptxt<BGV>,
+                                         Ctxt>::type;
+  
   auto mask = calculateMasks(context->getEA(), query_data, this->data);
 
   std::istringstream input(lookup_query.getQueryString());
 
-  // this is the type declared for result in getScore
-  std::stack<Matrix<TXT>> ctxtStack;
+  std::stack<Matrix<RTXT>> ctxtStack;
   std::string symbol;
 
   while (input >> symbol) {
@@ -811,7 +816,7 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
       auto rhs = ctxtStack.top();
       ctxtStack.pop();
       auto& lhs = ctxtStack.top();
-      lhs.template entrywiseOperation<TXT>(
+      lhs.template entrywiseOperation<RTXT>(
           rhs,
           [](auto& l, const auto& r) -> decltype(auto) {
             l.multiplyBy(r);
@@ -821,7 +826,7 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
       // Verify symbol is a number
       assertTrue(isNumber(symbol), "String is not a number: '" + symbol + "'");
       // push a copy of mask[symbol]
-      Matrix<TXT> col = mask.columns({std::stol(symbol)}).deepCopy();
+      Matrix<RTXT> col = mask.columns({std::stol(symbol)}).deepCopy();
       ctxtStack.push(col);
     }
   }
