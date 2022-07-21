@@ -505,7 +505,28 @@ public:
     query_str = std::move(convertStack.top());
   }
 
-  //function to return query_str
+  /**
+   * @brief find the multiplicative depth of a an And/Not query string
+   * @return a long corresponding to multiplicative depth
+   */
+  long findDepth() { return findDepth(query_str); }
+
+  /**
+   * @brief take double negatives out of a string recursively
+   */
+  void removeDoubleNegatives() { removeDoubleNegatives(query_str); }
+
+  /**
+   * @brief reduces depth of an And/Not query by rewriting the string
+   * using optimal depth multiproducts and removing double negatives
+   */
+  void reduceDepth()
+  {
+    removeDoubleNegatives(query_str);
+    reduceDepth(query_str);
+  }
+
+  // function to return query_str
   std::string getQueryString() const { return query_str; }
 
 private:
@@ -536,7 +557,7 @@ private:
     // Positive only
     return std::all_of(s.begin(), s.end(), ::isdigit);
   }
-  
+
   Query_t buildWeights(const vecvec& expr, const long columns) const
   {
     bool containsOR = false;
@@ -569,12 +590,12 @@ private:
     }
     return Query_t(std::move(Fs), std::move(mus), std::move(taus), containsOR);
   }
-  
+
   vecvec negate(const vecvec& clause) const
   {
     // use de Morgan's law to negate a clause which is an and of ors and return
     // another and of ors
-    vecvec notclause = {{}};    
+    vecvec notclause = {{}};
     for (int i = 0; i < clause.size(); i++) {
       // clause[i] = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
       vecvec nextclause;
@@ -686,6 +707,146 @@ private:
                          "Size of stack after expandOr should be 1");
 
     return std::move(convertStack.top());
+  }
+
+  /**
+   * @brief remove double negatives from a postfix query which is space
+   *separated
+   * @param s the string to remove double negatives from
+   **/
+  void removeDoubleNegatives(std::string& s)
+  {
+    for (int i = 0; i < s.length(); i++) {
+      if (s[i] == '!' && s[i + 2] == '!') {
+        s.erase(s.begin() + i - 1, s.begin() + i + 3);
+        i--;
+      }
+    }
+  }
+
+  std::vector<std::string> splitIntoMultiplicands(std::string& s)
+  {
+    if (s[s.length() - 1] != '&')
+      return {s};
+    else {
+      s.erase(s.end() - 3, s.end()); // strip off multiplication
+      std::istringstream input{s};
+      std::string symbol;
+      std::stack<std::string> stringstack;
+      while (input >> symbol) {
+        if (!symbol.compare("!"))
+          stringstack.top() += " !";
+        else if (!symbol.compare("&&")) {
+          std::string lhs = stringstack.top();
+          stringstack.pop();
+          stringstack.top() += " " + lhs + " &&";
+        } else {
+          stringstack.push(symbol); // NB check this is a column
+        }
+      }
+      assertEq<LogicError>(stringstack.size(),
+                           2UL,
+                           "multiplication should be binary");
+      std::string rhs = std::move(stringstack.top());
+      stringstack.pop();
+      std::string lhs = std::move(stringstack.top());
+      std::vector<std::string> mults = splitIntoMultiplicands(lhs);
+      std::vector<std::string> rhsmults = splitIntoMultiplicands(rhs);
+      mults.insert(mults.begin(), rhsmults.begin(), rhsmults.end());
+      return mults;
+    }
+  }
+
+  long findDepth(const std::string& s)
+  {
+    std::string scopy = s;
+    if (scopy[scopy.length() - 1] == '!') {
+      scopy.erase(scopy.end() - 2, scopy.end());
+      return findDepth(scopy);
+    } else if (scopy[scopy.length() - 1] == '&') {
+      scopy.erase(scopy.end() - 3, scopy.end()); // strip off multiplication
+      std::istringstream input{scopy};
+      std::string symbol;
+      std::stack<std::string> stringstack;
+      while (input >> symbol) {
+        if (!symbol.compare("!"))
+          stringstack.top() += " !";
+        else if (!symbol.compare("&&")) {
+          std::string lhs = stringstack.top();
+          stringstack.pop();
+          stringstack.top() += " " + lhs + " &&";
+        } else {
+          stringstack.push(symbol); // check this is a column?
+        }
+      }
+      assertEq<LogicError>(stringstack.size(),
+                           2UL,
+                           "error, multiplication should be binary");
+      std::string rhs = std::move(stringstack.top());
+      stringstack.pop();
+      std::string lhs = std::move(stringstack.top());
+      return std::max(findDepth(rhs), findDepth(lhs)) + 1;
+    } else {
+      return 0; // check is a column?
+    }
+  }
+
+  bool isStrictlyIncreasing(
+      std::vector<std::pair<std::string, long>> stringdepths)
+  {
+    for (int i = 1; i < stringdepths.size(); i++)
+      if (!(stringdepths[i - 1].second < stringdepths[i].second)) {
+        return false;
+      }
+    return true;
+  }
+
+  std::string optimalMultiProduct(const std::vector<std::string>& qs)
+  {
+    std::vector<std::pair<std::string, long>> stringdepths;
+    stringdepths.reserve(qs.size());
+    for (int i = 0; i < qs.size(); i++) {
+      stringdepths.push_back({qs[i], findDepth(qs[i])});
+    }
+    while (!isStrictlyIncreasing(stringdepths)) {
+      sort(stringdepths.begin(),
+           stringdepths.end(),
+           [](const std::pair<std::string, long>& p1,
+              const std::pair<std::string, long>& p2) {
+             return p1.second < p2.second;
+           });
+      for (int i = 0; i < stringdepths.size(); i++) {
+        if (i < stringdepths.size()) {
+          if (stringdepths[i].second == stringdepths[i + 1].second) {
+            stringdepths[i].first += " " + stringdepths[i + 1].first + " &&";
+            stringdepths[i].second++;
+            stringdepths.erase(stringdepths.begin() + i + 1);
+          }
+        }
+      }
+    }
+    for (int i = 1; i < stringdepths.size(); i++) {
+      stringdepths[0].first += " " + stringdepths[i].first + " &&";
+      stringdepths[0].second = stringdepths[i].second + 1;
+    }
+    return stringdepths[0].first;
+  }
+
+  void reduceDepth(std::string& s)
+  {
+    if (s[s.length() - 1] == '!') {
+      s.erase(s.end() - 2, s.end());
+      reduceDepth(s);
+      s += " !";
+      return;
+    } else if (s[s.length() - 1] == '&') {
+      std::vector<std::string> qs = splitIntoMultiplicands(s);
+      for_each(qs.begin(), qs.end(), [&](std::string& s) { reduceDepth(s); });
+      s = optimalMultiProduct(qs);
+      return;
+    } else {
+      return;
+    }
   }
 };
 
@@ -799,7 +960,7 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
                                              std::is_same_v<TXT2, Ptxt<BGV>>),
                                          Ptxt<BGV>,
                                          Ctxt>::type;
-  
+
   auto mask = calculateMasks(context->getEA(), query_data, this->data);
 
   std::istringstream input(lookup_query.getQueryString());
