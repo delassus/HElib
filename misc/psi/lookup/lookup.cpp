@@ -99,9 +99,10 @@ int main(int argc, char* argv[])
   const helib::QueryExpr& a = helib::makeQueryExpr(0);
   const helib::QueryExpr& b = helib::makeQueryExpr(1);
   const helib::QueryExpr& c = helib::makeQueryExpr(2);
+  const helib::QueryExpr& d = helib::makeQueryExpr(3);
 
   helib::QueryBuilder qbDoubleVars(a || !a);
-  helib::QueryBuilder qbNotofOr1(!(a || b || c));
+  helib::QueryBuilder qbNotofOr1(!(a || b || c || d));
   helib::QueryBuilder qbNotofOr2(!(a || b) && c);
   helib::QueryBuilder qbDoubleNot1(!!a);
   helib::QueryBuilder qbDoubleNot2(b || !!a);
@@ -123,19 +124,26 @@ int main(int argc, char* argv[])
   qbNotofAnd2.removeOr();
   std::cout << qbNotofAnd2.getQueryString() << "\n";
 
-  helib::Query_t queryDoubleVars = qbDoubleVars.build(database.columns());
+  std::cout << "NotOfOr1 query string: " << qbNotofOr1.getQueryString() << "\n";
+  std::cout << "NotOfOr1 depth: " << qbNotofOr1.findDepth() << "\n";
+  qbNotofOr1.reduceDepth();
+  std::cout << "NotOfOr1 query string after reducing depth: " << qbNotofOr1.getQueryString()
+            << "\n";
+  std::cout << "new NotOfOr1 depth: " << qbNotofOr1.findDepth() << "\n";
+
+  /*helib::Query_t queryDoubleVars = qbDoubleVars.build(database.columns());
   helib::Query_t queryNotofOr1 = qbNotofOr1.build(database.columns());
   helib::Query_t queryNotofOr2 = qbNotofOr2.build(database.columns());
   helib::Query_t queryDoubleNot1 = qbDoubleNot1.build(database.columns());
   helib::Query_t queryDoubleNot2 = qbDoubleNot2.build(database.columns());
   helib::Query_t queryNotofAnd1 = qbNotofAnd1.build(database.columns());
-  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());
+  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());*/
 
   auto clean = [](auto& x) { x.cleanUp(); };
 
   HELIB_NTIMER_START(lookupDoubleVars);
   auto doubleVars = database.contains(qbDoubleVars, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupDoubleVars);  
+  HELIB_NTIMER_STOP(lookupDoubleVars);
 
   HELIB_NTIMER_START(lookupNotofOr1);
   auto NotofOr1 = database.contains(qbNotofOr1, queryData).apply(clean);
