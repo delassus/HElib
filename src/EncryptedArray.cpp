@@ -707,32 +707,32 @@ void runningSums(const EncryptedArray& ea, Ctxt& ctxt)
 
 void totalSums(const EncryptedArray& ea, Ctxt& ctxt)
 {
-  long n = ea.size();
+  long n = ea.size(); // slot-count
 
   if (n == 1)
     return;
 
   Ctxt orig = ctxt;
-
-  long k = NTL::NumBits(n);
+  
+  long b = NTL::NumBits(n);
   long e = 1;
 
-  for (long i = k - 2; i >= 0; i--) {
-    Ctxt tmp1 = ctxt;
-    ea.rotate(tmp1, e);
-    ctxt += tmp1; // ctxt = ctxt + (ctxt >>> e)
+  for (long i = b - 2; i >= 0; i--) {
+    
+    Ctxt tmp1 = orig;
+    helib::rotate(tmp1, e);
+    orig += tmp1;
     e = 2 * e;
 
     if (NTL::bit(n, i)) {
       Ctxt tmp2 = orig;
-      ea.rotate(tmp2, e);
-      ctxt += tmp2; // ctxt = ctxt + (orig >>> e)
-                    // NOTE: we could have also computed
-                    // ctxt =  (ctxt >>> e) + orig, however,
-                    // this would give us greater depth/noise
+      helib::rotate(tmp2, 1);
+      tmp2 += ctxt;
+      orig = tmp2;
       e += 1;
     }
   }
+  ctxt = orig;
 }
 
 // Linearized polynomials.
