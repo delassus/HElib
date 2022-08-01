@@ -51,6 +51,14 @@ jobs:
             hexl: ON
     steps:
       - uses: actions/checkout@v2
+      - name: System Check
+        run: |
+          clang --version
+          gcc -v
+      - name: Install Valgrind [REMOVE BEFORE MERGE]
+        run: 
+          sudo apt-get update
+          sudo apt install -y valgrind
       - run: |
           set -x
           env
@@ -59,6 +67,6 @@ jobs:
           ./ci/build_install_lib.sh "${{ matrix.package_build }}" ${{ env.INSTALL_PREFIX }} \
             ${{ matrix.c_compiler }} ${{ matrix.cxx_compiler }} \
              ${{ matrix.hexl }} "./hexl/lib/cmake/hexl-1.2.4"
-          ./ci/test_lib.sh
+          valgrind --leak-check=yes --track-origins=yes --verbose ./ci/test_lib.sh
           ./ci/build_test_consumer.sh "examples" "${{ matrix.package_build }}" ${{ env.INSTALL_PREFIX }}
           ./ci/build_test_consumer.sh "utils" "${{ matrix.package_build }}" ${{ env.INSTALL_PREFIX }}
