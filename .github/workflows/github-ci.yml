@@ -39,11 +39,13 @@ jobs:
         # TODO: shared builds
         package_build: [ON, OFF]
         hexl: [ON, OFF]
-        c_compiler: [gcc]
+        c_compiler: [gcc, clang]
         os: [macos-latest, ubuntu-20.04]
         include: # Use g++ with gcc only and clang++ with clang only
           - c_compiler: gcc
             cxx_compiler: g++
+          - c_compiler: clang
+            cxx_compiler: clang++
         exclude: # Skip HEXL package build
           - package_build: ON
             hexl: ON
