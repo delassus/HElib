@@ -57,7 +57,7 @@ jobs:
           gcc -v
       - name: Install Valgrind [REMOVE BEFORE MERGE]
         run: 
-          sudo apt-get update
+          sudo apt-get update;
           sudo apt install -y valgrind
       - run: |
           set -x
