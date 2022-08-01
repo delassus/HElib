@@ -34,11 +34,12 @@ jobs:
       run:
         shell: bash
     strategy:
+      fail-fast: false
       matrix:
         # TODO: shared builds
         package_build: [ON, OFF]
-        hexl: [ON]
-        c_compiler: [gcc, clang]
+        hexl: [ON, OFF]
+        c_compiler: [gcc]
         os: [macos-latest, ubuntu-20.04]
         include: # Use g++ with gcc only and clang++ with clang only
           - c_compiler: gcc
