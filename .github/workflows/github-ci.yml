@@ -37,7 +37,7 @@ jobs:
       matrix:
         # TODO: shared builds
         package_build: [ON, OFF]
-        hexl: [ON, OFF]
+        hexl: [ON]
         c_compiler: [gcc, clang]
         os: [macos-latest, ubuntu-20.04]
         include: # Use g++ with gcc only and clang++ with clang only
