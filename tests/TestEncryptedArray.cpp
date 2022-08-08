@@ -12,25 +12,25 @@
 
 #include <helib/helib.h>
 #include <helib/debugging.h>
-#include <io.h>
-#include <helib/EncryptedArray.h>
 
 #include "test_common.h"
 #include "gtest/gtest.h"
 
-struct BGVParametersT
+namespace {
+
+struct BGVParameters
 {
   const long m;
   const long p;
   const long r;
   const long bits;
 
-  BGVParametersT(long m,
+  BGVParameters(long m,
                 long p,
                 long r,
                 long bits) : m(m), p(p), r(r), bits(bits){};
 
-  friend std::ostream& operator<<(std::ostream& os, const BGVParametersT& params)
+  friend std::ostream& operator<<(std::ostream& os, const BGVParameters& params)
   {
     return os << "{"
               << "m = " << params.m << ", "
@@ -40,17 +40,17 @@ struct BGVParametersT
   }
 };
 
-struct CKKSParametersT
+struct CKKSParameters
 {
   const long m;
   const long precision;
   const long bits;
 
-  CKKSParametersT(long m, long precision, long bits) :
+  CKKSParameters(long m, long precision, long bits) :
       m(m), precision(precision), bits(bits){};
 
   friend std::ostream& operator<<(std::ostream& os,
-                                  const CKKSParametersT& params)
+                                  const CKKSParameters& params)
   {
     return os << "{"
               << "m = " << params.m << ", "
@@ -59,7 +59,7 @@ struct CKKSParametersT
   }
 };
 
-class TestTotalSums_BGVT : public ::testing::TestWithParam<BGVParametersT>
+class TestTotalSums_BGV : public ::testing::TestWithParam<BGVParameters>
 {
 protected:
   const long m;
@@ -72,7 +72,7 @@ protected:
   helib::PubKey publicKey;
   const helib::EncryptedArray& ea;
 
-  TestTotalSums_BGVT() :
+  TestTotalSums_BGV() :
       m(GetParam().m),
       p(GetParam().p),
       r(GetParam().r),
@@ -98,7 +98,7 @@ protected:
 };
 
 
-class TestTotalSums_CKKST : public ::testing::TestWithParam<CKKSParametersT>
+class TestTotalSums_CKKS : public ::testing::TestWithParam<CKKSParameters>
 {
 protected:
   const long m;
@@ -110,7 +110,7 @@ protected:
   helib::PubKey publicKey;
   const helib::EncryptedArray& ea;
 
-  TestTotalSums_CKKST() :
+  TestTotalSums_CKKS() :
       m(GetParam().m),
       precision(GetParam().precision),
       bits(GetParam().bits),
@@ -135,7 +135,7 @@ protected:
 
 //tests here
 
-TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForPosValBGV)
+TEST_P(TestTotalSums_BGV, TSumsWorkCorrForPosValBGV)
 {
   std::vector<long> data(context.getEA().size());
   std::iota(data.begin(), data.end(), 1);
@@ -156,7 +156,7 @@ TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForPosValBGV)
   }
 }
 
-TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForNegValBGV)
+TEST_P(TestTotalSums_BGV, TSumsWorkCorrForNegValBGV)
 {
   std::vector<long> data(context.getEA().size());
   std::iota(data.begin(), data.end(), -context.getEA().size());
@@ -177,7 +177,7 @@ TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForNegValBGV)
   }
 }
 
-TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForPosNegValBGV)
+TEST_P(TestTotalSums_BGV, TSumsWorkCorrForPosNegValBGV)
 {
   std::vector<long> data(context.getEA().size());
 
@@ -205,7 +205,7 @@ TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForPosNegValBGV)
   }
 }
 
-TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForZeroValBGV)
+TEST_P(TestTotalSums_BGV, TSumsWorkCorrForZeroValBGV)
 {
   std::vector<long> data(context.getEA().size(), 0);
 
@@ -224,7 +224,7 @@ TEST_P(TestTotalSums_BGVT, TSumsWorkCorrForZeroValBGV)
   }
 }
 
-TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForZeroValCKKS)
+TEST_P(TestTotalSums_CKKS, TSumsWorkCorrForZeroValCKKS)
 {
   std::vector<std::complex<double>> data(context.getEA().size(), 0.0);
 
@@ -241,7 +241,7 @@ TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForZeroValCKKS)
   COMPARE_CXDOUBLE_VECS(ptxt.getSlotRepr(), post_decryption.getSlotRepr());
 }
 
-TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForPosValCKKS)
+TEST_P(TestTotalSums_CKKS, TSumsWorkCorrForPosValCKKS)
 {
   std::vector<std::complex<double>> data(context.getEA().size());
   for (std::size_t i = 0; i < data.size(); ++i) {
@@ -261,7 +261,7 @@ TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForPosValCKKS)
   COMPARE_CXDOUBLE_VECS(ptxt.getSlotRepr(), post_decryption.getSlotRepr());
 }
 
-TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForNegValCKKS)
+TEST_P(TestTotalSums_CKKS, TSumsWorkCorrForNegValCKKS)
 {
   std::vector<std::complex<double>> data(context.getEA().size());
   for (std::size_t i = 0; i < data.size(); ++i) {
@@ -281,7 +281,7 @@ TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForNegValCKKS)
   COMPARE_CXDOUBLE_VECS(ptxt.getSlotRepr(), post_decryption.getSlotRepr());
 }
 
-TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForPosNegValCKKS)
+TEST_P(TestTotalSums_CKKS, TSumsWorkCorrForPosNegValCKKS)
 {
   std::vector<std::complex<double>> data(context.getEA().size());
   for (std::size_t i = 0; i < data.size(); ++i) {
@@ -309,14 +309,16 @@ TEST_P(TestTotalSums_CKKST, TSumsWorkCorrForPosNegValCKKS)
 
 // parameters initialization
 INSTANTIATE_TEST_SUITE_P(Parameters,
-                         TestTotalSums_BGVT,
-                         ::testing::Values(BGVParametersT(/*m=*/45,
+                         TestTotalSums_BGV,
+                         ::testing::Values(BGVParameters(/*m=*/45,
                                                          /*p=*/317,
                                                          /*r=*/1,
-                                                         /*bits=*/500),  BGVParametersT(512, /*fermat_prime=*/257, 1, 500), BGVParametersT(45, 317, 1, 500), BGVParametersT(288, /*fermat_prime=*/17, 1, 500), BGVParametersT(45, 367, 1, 500)));
+                                                         /*bits=*/500),  BGVParameters(512, /*fermat_prime=*/257, 1, 500), BGVParameters(45, 317, 1, 500), BGVParameters(288, /*fermat_prime=*/17, 1, 500), BGVParameters(45, 367, 1, 500)));
 
 INSTANTIATE_TEST_SUITE_P(Parameters,
-                         TestTotalSums_CKKST,
-                         ::testing::Values(CKKSParametersT(/*m=*/64,
+                         TestTotalSums_CKKS,
+                         ::testing::Values(CKKSParameters(/*m=*/64,
                                                           /*precision=*/30,
-                                                          /*bits=*/500), CKKSParametersT(128, 35, 500), CKKSParametersT(256, 40, 500), CKKSParametersT(512, 50, 500), CKKSParametersT(1024, 45, 500)));
+                                                          /*bits=*/500), CKKSParameters(128, 35, 500), CKKSParameters(256, 40, 500), CKKSParameters(512, 50, 500), CKKSParameters(1024, 45, 500)));
+                                                          
+} // namespace                                                          
