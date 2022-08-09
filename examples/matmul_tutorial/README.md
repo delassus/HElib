@@ -1,7 +1,7 @@
 ## Building the repo
 This repo uses the HElib library, and is configured with CMake.
 
-To build, run `cmake -S . -B build -Dhelib_DIR=<helib install prefix>/share/cmake/helib/>` from the project folder. For my directory structure, this is `cmake -S . -B build -Dhelib_DIR=../helib_install/helib_pack/share/cmake/helib/`. You can then compile via moving into the build directory and running `make`. You can optionally specify the number of threads via e.g. `make -j16`. Compilation should produce five executable demos in the `build` directory.
+To build, run `cmake -S . -B build -Dhelib_DIR=<helib install prefix>/share/cmake/helib/>` from the project folder. For my directory structure, this is `cmake -S . -B build -Dhelib_DIR=~/helib_install/helib_pack/share/cmake/helib/`. You can then compile via moving into the build directory and running `make`. You can optionally specify the number of threads via e.g. `make -j16`. Compilation should produce five executable demos in the `build` directory.
 
 ## Running the demos
 To run all sections of demo k, type ./demo`k` from the build directory. For easy presentation, there's also the option to only run certain
