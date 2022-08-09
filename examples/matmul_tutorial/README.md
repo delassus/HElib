@@ -8,7 +8,7 @@ To run all sections of demo k, type ./demo`k` from the build directory. For easy
 sections -- e.g. ./demo3 1 0 1 0 0 will only run sections 1 and 3 of demo3. If only some arguments are specified, the rest will be assumed to be 0.
 
 # demo 0
-demo0 covers the basics of using matmul, and closely resembles tutorial 4 in HElib.
+demo0 covers the basics of using matmul, and closely resembles CKKS tutorial 4.
 - section 1: print matrix and vector
 - section 2: standard vector matrix multiplication 
 - section 3: vector matrix multiplication with encoded matrix
