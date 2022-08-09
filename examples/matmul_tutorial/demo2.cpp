@@ -43,7 +43,7 @@ int main()
     // HElib setup
     std::cout << "generating context ...";
     Context context =
-        ContextBuilder<CKKS>().m(16 * 1024).bits(119).precision(35).c(2).build();
+        ContextBuilder<CKKS>().m(16 * 1024).bits(119).precision(30).c(2).build();
     SecKey secretKey(context);
     secretKey.GenSecKey();
     addSome1DMatrices(secretKey);
