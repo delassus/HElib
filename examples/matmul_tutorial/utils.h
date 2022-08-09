@@ -90,7 +90,6 @@ void printVectorAsMatrix(const std::vector<T> &v, const size_t &dim0, const size
  */
 double sampleUniform(const double& min, const double& max)
 {
-    // changing this back from inline return as having problems with casting to zero.
     double d = rand();
     d /= RAND_MAX;
     d *= (max - min);
