@@ -23,7 +23,7 @@ Demo 0 demonstrates the basics of using `matmul` in HElib.
 
 ## Batched Linear Inference (demo 1)
 
-Our first application is to using a linear model to perform many predictions in parallel, where we want to keep the model encrypted.
+Our first application is using an encrypted linear model to perform many predictions in parallel.
 
 As linear model predictions correspond to dot products between the data and the model, we can achieve this functionality by letting our data form the columns of the plaintext matrix, and the encrypted model form the row vector.
 
@@ -38,7 +38,7 @@ In this example, we want to train a linear model homomorphically, but we want to
 
 If our training samples are given by $k$ vectors $\{x^{(k)}\}$ with labels $\{y^{(k)}\}$, then the weight vector which minimises the quadratic loss is given by $\hat{\beta}=(X^TX)^{-1}X^Ty$, where $X$ has row $k$ given by $(1|x^{(k)})$, and $y$ is a column of the labels.
 
-If we transpose both sides of this equation, we get the best linear model can be calculated $y^TX(X^TX)^{-1}$. As in our example, the matrix $X$ is known in the clear, we can calculate $X(X^TX)^{-1}$ in the clear and then multiply it with our vector of encrypted labels.
+If we transpose both sides of this equation, we get the best linear model can be calculated $y^TX(X^TX)^{-1}$. Since in our example the matrix $X$ is known in the clear, we can calculate $X(X^TX)^{-1}$ in the clear and then multiply it with our vector of encrypted labels.
 
 ![slide4](slides/slide4.jpg)
 
