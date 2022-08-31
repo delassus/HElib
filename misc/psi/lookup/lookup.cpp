@@ -123,13 +123,13 @@ int main(int argc, char* argv[])
   qbNotofAnd2.removeOr();
   std::cout << qbNotofAnd2.getQueryString() << "\n";
 
-  helib::Query_t queryDoubleVars = qbDoubleVars.build(database.columns());
-  helib::Query_t queryNotofOr1 = qbNotofOr1.build(database.columns());
-  helib::Query_t queryNotofOr2 = qbNotofOr2.build(database.columns());
-  helib::Query_t queryDoubleNot1 = qbDoubleNot1.build(database.columns());
-  helib::Query_t queryDoubleNot2 = qbDoubleNot2.build(database.columns());
-  helib::Query_t queryNotofAnd1 = qbNotofAnd1.build(database.columns());
-  helib::Query_t queryNotofAnd2 = qbNotofAnd2.build(database.columns());
+  helib::QueryType queryDoubleVars = qbDoubleVars.build(database.columns());
+  helib::QueryType queryNotofOr1 = qbNotofOr1.build(database.columns());
+  helib::QueryType queryNotofOr2 = qbNotofOr2.build(database.columns());
+  helib::QueryType queryDoubleNot1 = qbDoubleNot1.build(database.columns());
+  helib::QueryType queryDoubleNot2 = qbDoubleNot2.build(database.columns());
+  helib::QueryType queryNotofAnd1 = qbNotofAnd1.build(database.columns());
+  helib::QueryType queryNotofAnd2 = qbNotofAnd2.build(database.columns());
 
   auto clean = [](auto& x) { x.cleanUp(); };
 
@@ -182,7 +182,44 @@ int main(int argc, char* argv[])
                      NotofAnd1,
                      cmdLineOpts.offset);
   writeResultsToFile(cmdLineOpts.outFilePath + "_NotofAnd2",
-                     NotofAnd2,
+                     NotofAnd2,cmdLineOpts.offset);
+  
+  helib::QueryBuilder qb(a);
+  helib::QueryBuilder qbAnd(a && b);
+  helib::QueryBuilder qbOr(a || b);
+  helib::QueryBuilder qbExpand(a || (b && c));
+  
+  helib::QueryType query = qb.build(database.columns());
+  helib::QueryType queryAnd = qbAnd.build(database.columns());
+  helib::QueryType queryOr = qbOr.build(database.columns());
+  helib::QueryType queryExpand = qbExpand.build(database.columns());
+  HELIB_NTIMER_STOP(buildQuery);
+
+  HELIB_NTIMER_START(lookupSame);
+  auto clean = [](auto& x) { x.cleanUp(); };
+  auto match = database.contains(query, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupSame);
+  HELIB_NTIMER_START(lookupAnd);
+  auto matchAnd = database.contains(queryAnd, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupAnd);
+  HELIB_NTIMER_START(lookupOr);
+  auto matchOr = database.contains(queryOr, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupOr);
+  HELIB_NTIMER_START(lookupExpand);
+  auto matchExpand = database.contains(queryExpand, queryData).apply(clean);
+  HELIB_NTIMER_STOP(lookupExpand);
+
+  HELIB_NTIMER_START(writeResults);
+  // Write results to file
+  writeResultsToFile(cmdLineOpts.outFilePath, match, cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_and",
+                     matchAnd,
+                     cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_or",
+                     matchOr,
+                     cmdLineOpts.offset);
+  writeResultsToFile(cmdLineOpts.outFilePath + "_expand",
+                     matchExpand,
                      cmdLineOpts.offset);
   HELIB_NTIMER_STOP(writeResults);
 

@@ -14,13 +14,12 @@
 #define HELIB_PARTIALMATCH_H
 
 #include <sstream>
-#include <stack>
-#include <unordered_set>
 
 #include <helib/Matrix.h>
 #include <helib/PolyMod.h>
+#include <helib/query.h>
 
-// This code is in flux and should be considered bery alpha.
+// This code is in flux and should be considered very alpha.
 // Not recommended for public use.
 
 namespace helib {
@@ -119,7 +118,7 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
  * @brief Given a mask and information about the query to be performed,
  * calculates a score for each matching element signified by the mask.
  * @tparam TXT type of the mask matrix. Must be a `Ptxt` or `Ctxt`.
- * @param index_sets The set of indicies signifying which columns of the mask
+ * @param index_sets The set of indices signifying which columns of the mask
  * to query.
  * @param offsets The constant term to be added to the final score of each
  * queried column.
@@ -193,502 +192,6 @@ inline PolyMod partialMatchEncode(uint32_t input, const Context& context)
   return PolyMod(coeffs, context.getSlotRing());
 }
 
-struct Expr;
-class ColNumber;
-
-/**
- * @brief An alias for a shared pointer to an `Expr` object.
- **/
-using QueryExpr = std::shared_ptr<Expr>;
-
-/**
- * @brief Utility function for creating a shared pointer to a specified column
- * in a query.
- * @param cl The index of the column to be used in the query.
- * @return Shared pointer to the class `ColNumber`.
- **/
-inline std::shared_ptr<ColNumber> makeQueryExpr(int cl)
-{
-  return std::make_shared<ColNumber>(cl);
-}
-
-/**
- * @struct Expr
- * @brief Base structure for logical expressions.
- * @note This is pure virtual.
- **/
-struct Expr
-{
-  virtual std::string eval() const = 0;
-  virtual ~Expr() = default;
-};
-
-/**
- * @class ColNumber
- * @brief An object representing a column of a database as an expression which
- * inherits from `Expr`.
- **/
-class ColNumber : public Expr
-{
-public:
-  /**
-   * @brief Function for returning the column number of the object.
-   * @return A string representation of the column number.
-   **/
-  std::string eval() const override { return std::to_string(column); }
-
-  /**
-   * @brief Constructor.
-   * @param c The column number.
-   **/
-  ColNumber(int c) : column(c) {}
-
-private:
-  int column;
-};
-
-/**
- * @class Not
- * @brief An object representing the logical NOT expression which inherits from
- * `Expr`.
- **/
-class Not : public Expr
-{
-public:
-  /**
-   * @brief Function for returning the logical NOT expression where the NOT
-   * operation is represented by `-` and each operand * is a column number.
-   * @return A string representing the NOT expression, where i- is not column i
-   **/
-  std::string eval() const override { return p->eval() + " !"; }
-  /**
-   * @brief Constructor.
-   * @param p The operand of the expression.
-   **/
-  Not(const QueryExpr& exp) : p(exp) {}
-
-private:
-  QueryExpr p;
-};
-
-/**
- * @class And
- * @brief An object representing the logical AND expression which inherits from
- * `Expr`.
- **/
-class And : public Expr
-{
-public:
-  /**
-   * @brief Function for returning the logical AND expression in reverse polish
-   * notation where the AND operation is represented by `&&` and each operand
-   * is a column number.
-   * @return A string representing the AND expression in reverse polish
-   * notation.
-   **/
-  std::string eval() const override
-  {
-    return lhs->eval() + " " + rhs->eval() + " &&";
-  }
-
-  /**
-   * @brief Constructor.
-   * @param l The left operand of the expression.
-   * @param r The right operand of the expression.
-   **/
-  And(const QueryExpr& l, const QueryExpr& r) : lhs(l), rhs(r) {}
-
-private:
-  QueryExpr lhs;
-  QueryExpr rhs;
-};
-
-/**
- * @class Or
- * @brief An object representing the logical OR expression which inherits from
- * `Expr`.
- **/
-class Or : public Expr
-{
-public:
-  /**
-   * @brief Function for returning the logical OR expression in reverse polish
-   * notation where the OR operation is represented by `||` and each operand
-   * is a column number.
-   * @return A string representing the OR expression in reverse polish
-   * notation.
-   **/
-  std::string eval() const override
-  {
-    return lhs->eval() + " " + rhs->eval() + " ||";
-  }
-
-  /**
-   * @brief Constructor.
-   * @param l The left operand of the expression.
-   * @param r The right operand of the expression.
-   **/
-  Or(const QueryExpr& l, const QueryExpr& r) : lhs(l), rhs(r) {}
-
-private:
-  QueryExpr lhs;
-  QueryExpr rhs;
-};
-
-/**
- * @brief Overloaded operator for creating a shared pointer to a NOT
- * expression.
- * @param p operand of the NOT expression.
- * @return Shared pointer to the class `Not`.
- **/
-inline std::shared_ptr<Not> operator!(const QueryExpr& p)
-{
-  return std::make_shared<Not>(p);
-}
-
-/**
- * @brief Overloaded operator for creating a shared pointer to an AND
- * expression.
- * @param lhs Left operand of the AND expression.
- * @param rhs Right operand of the AND expression.
- * @return Shared pointer to the class `And`.
- **/
-inline std::shared_ptr<And> operator&&(const QueryExpr& lhs,
-                                       const QueryExpr& rhs)
-{
-  return std::make_shared<And>(lhs, rhs);
-}
-
-/**
- * @brief Overloaded operator for creating a shared pointer to an OR
- * expression.
- * @param lhs Left operand of the OR expression.
- * @param rhs Right operand of the OR expression.
- * @return Shared pointer to the class `Or`.
- **/
-inline std::shared_ptr<Or> operator||(const QueryExpr& lhs,
-                                      const QueryExpr& rhs)
-{
-  return std::make_shared<Or>(lhs, rhs);
-}
-
-/**
- * @struct Query_t
- * @brief Structure containing all information required for an HE query.
- **/
-struct Query_t
-{
-  /**
-   * @brief `std::vector` of index sets. These index sets specify the indexes
-   * of the columns in each column subset.
-   **/
-  std::vector<std::vector<long>> Fs;
-
-  /**
-   * @brief `std::vector` of offsets. Each offset is a constant value. There
-   * should be a single offset for each index set.
-   **/
-  std::vector<long> mus;
-
-  /**
-   * @brief `std::vector` of a set of weights. Each weight set corresponds to a
-   * single index set where each individual weight corresponds to the index of
-   * the index set.
-   **/
-  std::vector<Matrix<long>> taus;
-
-  /**
-   * @brief Flag indicating if the query contains a logical OR operation. This
-   * is used for optimization purposes.
-   **/
-  bool containsOR = false;
-
-  /**
-   * @brief Constructor.
-   * @param index_sets The set of column subsets.
-   * @param offsets The set of offset constants.
-   * @param weights The set of weight sets.
-   * @param isThereAnOR Boolean value indicating if the query contains an OR
-   * operation.
-   **/
-  Query_t(const std::vector<std::vector<long>>& index_sets,
-          const std::vector<long>& offsets,
-          const std::vector<Matrix<long>>& weights,
-          const bool isThereAnOR) :
-      Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {
-  }
-
-  /**
-   * @brief Constructor.
-   * @param index_sets The set of column subsets.
-   * @param offsets The set of offset constants.
-   * @param weights The set of weight sets.
-   * @param isThereAnOR Boolean value indicating if the query contains an OR
-   * operation.
-   **/
-  Query_t(std::vector<std::vector<long>>&& index_sets,
-          std::vector<long>&& offsets,
-          std::vector<Matrix<long>>&& weights,
-          bool isThereAnOR) :
-      Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {
-  }
-};
-
-/**
- * @class QueryBuilder
- * @brief An object used to construct a `Query_t` object from a logical
- * expression.
- **/
-class QueryBuilder
-{
-
-  // 'outer' vec are the and groups and 'inner' are the or groups
-  using vecvec = std::vector<std::vector<long>>;
-
-public:
-  /**
-   * @brief Constructor.
-   * @param expr The logical expression to build.
-   * @note The expression is evaluated to reverse polish notation.
-   **/
-  QueryBuilder(const QueryExpr& expr) : query_str(expr->eval()) {}
-
-  /**
-   * @brief Function for building the `Query_t` object from the expression.
-   * @param columns The total number of columns in the column set.
-   * @return The resultant `Query_t` object containing information relating to
-   * the query.
-   **/
-  Query_t build(long columns) const
-  {
-
-    // First onvert the query to "type 1" by expanding out necessary ORs
-    // to allow for zero ordering, (i+1) corresponds to i, negatives
-    // correspond to not
-    vecvec expr = expandOr(query_str);
-    // then eliminate duplicates from inner clauses
-    this->tidy(expr);
-    // lastly form weights
-    return this->buildWeights(expr, columns);
-  }
-  void removeOr()
-  {
-    std::stack<std::string> convertStack;
-
-    std::istringstream input{query_str};
-    std::string symbol;
-    while (input >> symbol) {
-      if (!symbol.compare("&&")) {
-        auto rhs = convertStack.top();
-        convertStack.pop();
-        auto& lhs = convertStack.top();
-        lhs += " " + rhs + " &&";
-      } else if (!symbol.compare("||")) {
-        auto rhs = convertStack.top();
-        convertStack.pop();
-        auto& lhs = convertStack.top();
-        lhs += " !" + rhs + " ! && !";
-      } else if (!symbol.compare("!")) {
-        convertStack.top() += " !";
-      } else {
-        // Should be a number
-        assertTrue(isNumber(symbol),
-                   "String is not a number: '" + symbol + "'");
-        convertStack.push(" " + symbol);
-      }
-    }
-    assertEq<LogicError>(1UL,
-                         convertStack.size(),
-                         "Size of stack after removeOr should be 1");
-    query_str = std::move(convertStack.top());
-  }
-
-  //function to return query_str
-  std::string getQueryString() const { return query_str; }
-
-private:
-  std::string query_str;
-
-  void printStack(std::stack<vecvec> stack)
-  {
-    while (!stack.empty()) {
-      printVecVec(stack.top());
-      stack.pop();
-    }
-  }
-
-  void printVecVec(const vecvec& vv)
-  {
-    for (const auto& v : vv) {
-      std::cout << "[ ";
-      for (const auto& e : v) {
-        std::cout << e << " ";
-      }
-      std::cout << "]";
-    }
-    std::cout << "\n";
-  }
-
-  bool isNumber(const std::string& s) const
-  {
-    // Positive only
-    return std::all_of(s.begin(), s.end(), ::isdigit);
-  }
-  
-  Query_t buildWeights(const vecvec& expr, const long columns) const
-  {
-    bool containsOR = false;
-
-    vecvec Fs(expr.size());
-    {
-      std::vector<long> v(columns);
-      std::iota(v.begin(), v.end(), 0);
-      std::fill(Fs.begin(), Fs.end(), v);
-    }
-    std::vector<long> mus(expr.size(), 1);
-    std::vector<Matrix<long>> taus;
-    taus.reserve(expr.size());
-
-    // Create the taus
-    for (long i = 0; i < long(expr.size()); ++i) { // Each tau
-      mus[i] = 0;                                  // Set mu to zero.
-      Matrix<long> M(columns, 1);                  // Create temp tau matrix
-      containsOR = (expr[i].size() > 1) ? true : containsOR;
-      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
-      {
-        // add one to the offset for each not: second condition to
-        // remedy case where column appears twice in one clause
-        if (expr[i][j] < 0 && (M(abs(expr[i][j]) - 1, 0) >= 0))
-          mus[i] += 1;
-        // mark "not" columns as -1, columns as 1
-        M(abs(expr[i][j]) - 1, 0) += (expr[i][j] >= 0) ? 1 : -1;
-      }
-      taus.push_back(std::move(M));
-    }
-    return Query_t(std::move(Fs), std::move(mus), std::move(taus), containsOR);
-  }
-  
-  vecvec negate(const vecvec& clause) const
-  {
-    // use de Morgan's law to negate a clause which is an and of ors and return
-    // another and of ors
-    vecvec notclause = {{}};    
-    for (int i = 0; i < clause.size(); i++) {
-      // clause[i] = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
-      vecvec nextclause;
-      for (auto& j : clause[i]) {
-        nextclause.push_back({-1 * j});
-      }
-      vecvec notclausetemp;
-      notclausetemp.reserve(nextclause.size() * notclause.size());
-      // then Cartesian style product
-      for (const auto& j : notclause) {
-        for (const auto& k : nextclause) {
-          std::vector<long> x = j;
-          x.insert(x.end(), k.begin(), k.end());
-          notclausetemp.push_back(x);
-        }
-      }
-      notclause = notclausetemp;
-    }
-    return notclause;
-  }
-
-  /*
-  Performs the following optimisations in place:
-  - delete duplicate variables from each inner clause
-  - delete variable and negation when both appear in an inner clause
-  */
-  void tidy(vecvec& expr) const
-  {
-    vecvec x;
-    for (auto& y : expr) {
-      tidyClause(y);
-      if (y.size() != 0)
-        x.push_back(y);
-    }
-    expr = x;
-  }
-  /*
-  tidies an inner clause in place
-  */
-  void tidyClause(std::vector<long>& clause) const
-  {
-    std::unordered_set<long> vars;
-    std::vector<long> newclause;
-    for (auto& i : clause) {
-      if (vars.find(i) == vars.end()) {
-        newclause.push_back(i);
-        vars.insert(i);
-      } else {
-        continue;
-      }
-    }
-    clause.clear();
-    for (auto& i : newclause) {
-      if (vars.find(-1 * i) == vars.end())
-        clause.push_back(i);
-    }
-  }
-
-  vecvec expandOr(const std::string& s) const
-  {
-    std::stack<vecvec> convertStack;
-
-    std::istringstream input{s};
-    std::ostringstream output{};
-
-    std::string symbol;
-
-    while (input >> symbol) {
-      if (!symbol.compare("&&")) {
-        // Squash the top into penultimate.
-        auto op = convertStack.top();
-        convertStack.pop();
-        auto& top = convertStack.top();
-        top.insert(top.end(), op.begin(), op.end());
-      } else if (!symbol.compare("||")) {
-        // Cartesian-esque product
-        auto op1 = convertStack.top();
-        convertStack.pop();
-        auto op2 = convertStack.top();
-        convertStack.pop();
-
-        vecvec prod;
-        prod.reserve(op1.size() * op2.size());
-        for (const auto& i : op1)
-          for (const auto& j : op2) {
-            auto x = i;
-            x.insert(x.end(), j.begin(), j.end());
-            prod.push_back(std::move(x));
-          }
-
-        convertStack.push(std::move(prod));
-      } else if (!symbol.compare("!")) {
-        vecvec top = convertStack.top();
-        vecvec clause = negate(top); // negate top of stack
-        convertStack.pop();          // pop
-        convertStack.push(clause);   // push negation
-      } else {
-        // Assume it is a number. But sanity check anyway.
-        assertTrue(isNumber(symbol),
-                   "String is not a number: '" + symbol + "'");
-        convertStack.emplace(
-            vecvec(1, {std::stol(symbol) + 1})); // using 1 ordering temporarily
-      }
-    }
-
-    // Now read answer off stack (should be size == 1).
-    assertEq<LogicError>(1UL,
-                         convertStack.size(),
-                         "Size of stack after expandOr should be 1");
-
-    return std::move(convertStack.top());
-  }
-};
-
 /**
  * @class Database
  * @tparam TXT The database is templated on `TXT` which can either be a `Ctxt`
@@ -710,8 +213,7 @@ public:
    **/
   Database(const Matrix<TXT>& M, std::shared_ptr<const Context> c) :
       data(M), context(c)
-  {
-  }
+  {}
 
   // FIXME: Should this option really exist?
   /**
@@ -742,7 +244,6 @@ public:
   auto contains(const QueryBuilder& lookup_query,
                 const Matrix<TXT2>& query_data) const;
 
-  // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
   /**
    * @brief Overloaded function for performing a database lookup given a query
    *  expression and query data.
@@ -754,10 +255,9 @@ public:
    * match or no match respectively.
    **/
   template <typename TXT2>
-  auto contains(const Query_t& lookup_query,
+  auto contains(const QueryType& lookup_query,
                 const Matrix<TXT2>& query_data) const;
 
-  // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
   /**
    * @brief Function for performing a weighted partial match given a query
    * expression and query data.
@@ -768,7 +268,7 @@ public:
    * @return A `Matrix<TXT2>` containing a score on weighted matches.
    **/
   template <typename TXT2>
-  auto getScore(const Query_t& weighted_query,
+  auto getScore(const QueryType& weighted_query,
                 const Matrix<TXT2>& query_data) const;
 
   // TODO - correct name?
@@ -838,7 +338,7 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
 
 template <typename TXT>
 template <typename TXT2>
-inline auto Database<TXT>::contains(const Query_t& lookup_query,
+inline auto Database<TXT>::contains(const QueryType& lookup_query,
                                     const Matrix<TXT2>& query_data) const
 {
   auto result = getScore<TXT2>(lookup_query, query_data);
@@ -856,7 +356,7 @@ inline auto Database<TXT>::contains(const Query_t& lookup_query,
 
 template <typename TXT>
 template <typename TXT2>
-inline auto Database<TXT>::getScore(const Query_t& weighted_query,
+inline auto Database<TXT>::getScore(const QueryType& weighted_query,
                                     const Matrix<TXT2>& query_data) const
 {
   auto mask = calculateMasks(context->getEA(), query_data, this->data);
