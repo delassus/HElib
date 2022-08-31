@@ -20,7 +20,8 @@
  *   class Table "and its full contents"
  *   inline QueryType pseudoParser(const std::string& s)
  *   inline QueryType pseudoParserFromFile(const std::string& filename)
- *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string& s)
+ *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string&
+ * s)
  *
  * Modified:
  *   Functions added to QueryBuilder class
@@ -317,7 +318,8 @@ struct QueryType
             const std::vector<Matrix<long>>& weights,
             const bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 
   /**
    * @brief Constructor.
@@ -332,7 +334,8 @@ struct QueryType
             std::vector<Matrix<long>>&& weights,
             bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 };
 
 /**
@@ -511,12 +514,15 @@ private:
     }
     std::cout << "\n";
   }
-  // Functions for the "weights" engine
+
+  /*
+  Given an and of ors
+  */
   vecvec negate(const vecvec& clause) const
   {
     // use de Morgan's law to negate a clause which is an and of ors and return
     // another and of ors
-    vecvec notclause = {{}};    
+    vecvec notclause = {{}};
     for (int i = 0; i < clause.size(); i++) {
       // clause[i] = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
       vecvec nextclause;
@@ -537,6 +543,14 @@ private:
     }
     return notclause;
   }
+  /**
+   * @brief take a string in reverse polish notation and produce a
+   * vector of vectors representing a logically equivalent and of ors.
+   * @param s string in RPN, operators given by &&, || or !
+   * @return vecvec a logically equivalent conjunction of disjunctions of
+   * either columns or their negations. (i + 1) corresponds to column i, and
+   * negatives correspond to negations.
+   */
   vecvec expandOr(const std::string& s) const
   {
     std::stack<vecvec> convertStack;
@@ -590,7 +604,14 @@ private:
 
     return std::move(convertStack.top());
   }
-
+  /**
+   * @brief build the weights for a query given as an and of ors.
+   * @param expr inner groups correspond to ors, and we take the and across
+   * all inner groups. (i + 1) corresponds to column i, and negatives to
+   * negations.
+   * @param columns The number of columns in the database.
+   * @return QueryType with the correct weights.
+   */
   QueryType buildWeights(const vecvec& expr, const long columns) const
   {
     bool containsOR = false;
@@ -607,26 +628,37 @@ private:
 
     // Create the taus
     for (long i = 0; i < long(expr.size()); ++i) { // Each tau
-      mus[i] = 0;                                  // Set mu to zero.
-      Matrix<long> M(columns, 1);                  // Create temp tau matrix
+      assertTrue(expr[i].size() > 0,
+                 "empty clause found at index " + std::to_string(i) +
+                     ", function called without Tidy().");
+      mus[i] = 0;                 // Set mu to zero.
+      Matrix<long> M(columns, 1); // Create temp tau matrix
       containsOR = (expr[i].size() > 1) ? true : containsOR;
       for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
       {
-        // add one to the offset for each not: second condition to
-        // remedy case where column appears twice in one clause
-        if (expr[i][j] < 0 && (M(abs(expr[i][j]) - 1, 0) >= 0))
+        // column should not already have been seen in this clause
+        assertTrue(M(abs(expr[i][j]) - 1, 0) == 0,
+                   "repeat column found at index " + std::to_string(i) +
+                       "for column " + std::to_string(j) +
+                       ", function called without Tidy().");
+        // add one to the offset for each not
+        if (expr[i][j] < 0)
           mus[i] += 1;
         // mark "not" columns as -1, columns as 1
-        M(abs(expr[i][j]) - 1, 0) += (expr[i][j] >= 0) ? 1 : -1;
+        M(abs(expr[i][j]) - 1, 0) = ((expr[i][j] >= 0) ? 1 : -1);
       }
       taus.push_back(std::move(M));
     }
-    return QueryType(std::move(Fs), std::move(mus), std::move(taus), containsOR);
+    return QueryType(std::move(Fs),
+                     std::move(mus),
+                     std::move(taus),
+                     containsOR);
   }
   /*
-  Performs the following optimisations in place:
-  - delete duplicate variables from each inner clause
-  - delete variable and negation when both appear in an inner clause
+  Makes the following changes in place:
+  - deletes duplicate variables from each inner clause
+  - deletes variable and negation when both appear in an inner clause
+  - deletes clauses which are empty
   */
   void tidy(vecvec& expr) const
   {
@@ -639,7 +671,8 @@ private:
     expr = x;
   }
   /*
-  tidies an inner clause in place
+  tidies an inner clause in place by deleting duplicate columns and removing
+  columns for which both the column and it's negation appear
   */
   void tidyClause(std::vector<long>& clause) const
   {
@@ -659,10 +692,6 @@ private:
         clause.push_back(i);
     }
   }
-  
-  // Functions for the "AND/NOT" engine
-  
-  
 };
 
 /**
