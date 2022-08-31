@@ -495,7 +495,7 @@ private:
     return ret;
   }
 
-  void printStack(std::stack<vecvec> stack)
+  void printStack(std::stack<vecvec> stack) const
   {
     while (!stack.empty()) {
       printVecVec(stack.top());
@@ -503,7 +503,7 @@ private:
     }
   }
 
-  void printVecVec(const vecvec& vv)
+  void printVecVec(const vecvec& vv) const
   {
     for (const auto& v : vv) {
       std::cout << "[ ";
@@ -515,9 +515,10 @@ private:
     std::cout << "\n";
   }
 
-  /*
-  Given an and of ors
-  */
+  /**
+   * @brief Given a vecvec intepreted as an and of ors, return a vecvec
+   * corresponding to the negation.
+   */
   vecvec negate(const vecvec& clause) const
   {
     // use de Morgan's law to negate a clause which is an and of ors and return
@@ -573,7 +574,6 @@ private:
         convertStack.pop();
         auto op2 = convertStack.top();
         convertStack.pop();
-
         vecvec prod;
         prod.reserve(op1.size() * op2.size());
         for (const auto& i : op1)
