@@ -213,7 +213,8 @@ public:
    **/
   Database(const Matrix<TXT>& M, std::shared_ptr<const Context> c) :
       data(M), context(c)
-  {}
+  {
+  }
 
   // FIXME: Should this option really exist?
   /**
@@ -241,7 +242,7 @@ public:
    * match or no match respectively.
    **/
   template <typename TXT2>
-  auto contains(const QueryBuilder& lookup_query,
+  auto contains(const std::string& query_string,
                 const Matrix<TXT2>& query_data) const;
 
   /**
@@ -291,7 +292,7 @@ private:
 };
 template <typename TXT>
 template <typename TXT2>
-inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
+inline auto Database<TXT>::contains(const std::string& query_string,
                                     const Matrix<TXT2>& query_data) const
 {
   // resolve type names: if both are ptxt, return ptxt, otherwise return ctxt
@@ -299,10 +300,10 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
                                              std::is_same_v<TXT2, Ptxt<BGV>>),
                                          Ptxt<BGV>,
                                          Ctxt>::type;
-  
+
   auto mask = calculateMasks(context->getEA(), query_data, this->data);
 
-  std::istringstream input(lookup_query.getQueryString());
+  std::istringstream input(query_string);
 
   std::stack<Matrix<RTXT>> ctxtStack;
   std::string symbol;
@@ -323,7 +324,11 @@ inline auto Database<TXT>::contains(const QueryBuilder& lookup_query,
             return l;
           });
     } else {
-      // Verify symbol is a number
+      // If symbol is ||, throw a specific error
+      assertFalse(
+          symbol == "||",
+          "Cannot evaluate contains() on a string which contains Or operator");
+      // Otherwise, verify symbol is a number
       assertTrue(isNumber(symbol), "String is not a number: '" + symbol + "'");
       // push a copy of mask[symbol]
       Matrix<RTXT> col = mask.columns({std::stol(symbol)}).deepCopy();
