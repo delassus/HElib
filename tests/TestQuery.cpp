@@ -445,4 +445,46 @@ TEST(TestQuery, ExpectedThrowsPseudoParser)
                                    " \n"),
                helib::InvalidArgument);
 }
+
+TEST(TestQuery, RemoveOrExpectedString)
+{
+  const helib::QueryExpr& a = helib::makeQueryExpr(0);
+  const helib::QueryExpr& b = helib::makeQueryExpr(1);
+  const helib::QueryExpr& c = helib::makeQueryExpr(2);
+  const helib::QueryExpr& d = helib::makeQueryExpr(3);
+
+  std::array<helib::QueryBuilder, 13> qbs = {
+      helib::QueryBuilder((a && b) || c),
+      helib::QueryBuilder(a || b || c),
+      helib::QueryBuilder((a || b) && c),
+      helib::QueryBuilder((a || b) && (c || d)),
+      helib::QueryBuilder((a && b) || (c && d)),
+      helib::QueryBuilder(a && (b || (c && d))),
+      helib::QueryBuilder(a || !a),
+      helib::QueryBuilder(!(a || b || c)),
+      helib::QueryBuilder(!(a || b) && c),
+      helib::QueryBuilder(!!a),
+      helib::QueryBuilder(b || !!a),
+      helib::QueryBuilder(!(a && b && c)),
+      helib::QueryBuilder(!((a || b) && (c || d)))};
+  std::array<std::string, 13> expected_strings = {
+      "0 1 && ! 2 ! && !",
+      "0 ! 1 ! && ! ! 2 ! && !",
+      "0 ! 1 ! && ! 2 &&",
+      "0 ! 1 ! && ! 2 ! 3 ! && ! &&",
+      "0 1 && ! 2 3 && ! && !",
+      "0 1 ! 2 3 && ! && ! &&",
+      "0 ! 0 ! ! && !",
+      "0 ! 1 ! && ! ! 2 ! && ! !",
+      "0 ! 1 ! && ! ! 2 &&",
+      "0 ! !",
+      "1 ! 0 ! ! ! && !",
+      "0 1 && 2 && !",
+      "0 ! 1 ! && ! 2 ! 3 ! && ! && !"};
+
+  for (int i = 0; i < qbs.size(); i++) {
+    qbs[i].removeOr();
+    EXPECT_EQ(expected_strings[i], qbs[i].getQueryString()) << "*** i = " << i;
+  }
+}
 } // namespace

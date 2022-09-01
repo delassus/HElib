@@ -398,14 +398,14 @@ public:
         auto rhs = convertStack.top();
         convertStack.pop();
         auto& lhs = convertStack.top();
-        lhs += " !" + rhs + " ! && !";
+        lhs += " ! " + rhs + " ! && !";
       } else if (!symbol.compare("!")) {
         convertStack.top() += " !";
       } else {
         // Should be a number
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
-        convertStack.push(" " + symbol);
+        convertStack.push(symbol);
       }
     }
     assertEq<LogicError>(1UL,
