@@ -740,7 +740,7 @@ TEST(TestQuery, RemoveOrExpectedString)
       "0 1 && 2 && !",
       "0 ! 1 ! && ! 2 ! 3 ! && ! && !"};
 
-  for (int i = 0; i < qbs.size(); i++) {
+  for (std::size_t i = 0; i < qbs.size(); i++) {
     qbs[i].removeOr();
     EXPECT_EQ(expected_strings[i], qbs[i].getQueryString()) << "*** i = " << i;
   }
