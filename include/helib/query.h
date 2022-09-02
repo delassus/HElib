@@ -524,10 +524,10 @@ private:
     // use de Morgan's law to negate a clause which is an and of ors and return
     // another and of ors
     vecvec notclause = {{}};
-    for (int i = 0; i < clause.size(); i++) {
-      // clause[i] = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
+    for (const auto& i : clause) {
+      // i = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
       vecvec nextclause;
-      for (auto& j : clause[i]) {
+      for (const auto& j : i) {
         nextclause.push_back({-1 * j});
       }
       vecvec notclausetemp;
