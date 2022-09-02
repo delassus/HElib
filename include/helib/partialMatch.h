@@ -230,7 +230,6 @@ public:
       context(std::shared_ptr<const helib::Context>(&c, [](auto UNUSED p) {}))
   {
   }
-  // FIXME: Combination of TXT = ctxt and TXT2 = ptxt does not work
   /**
    * @brief Overloaded function for performing a database lookup given a query
    *  expression and query data.
@@ -277,7 +276,7 @@ public:
    * @brief Returns number of columns in the database.
    * @return The number of columns in the database.
    **/
-  long columns() { return data.dims(1); }
+  long columns() const { return data.dims(1); }
 
   Matrix<TXT>& getData();
 
@@ -330,9 +329,12 @@ inline auto Database<TXT>::contains(const std::string& query_string,
           "Cannot evaluate contains() on a string which contains Or operator");
       // Otherwise, verify symbol is a number
       assertTrue(isNumber(symbol), "String is not a number: '" + symbol + "'");
+      // And verify the number is in [0,...,columns - 1]
+      assertTrue((std::stol(symbol) >= 0) &&
+                     ((std::stol(symbol) < this->columns())),
+                 "column is out of range");
       // push a copy of mask[symbol]
-      Matrix<RTXT> col = mask.columns({std::stol(symbol)}).deepCopy();
-      ctxtStack.push(col);
+      ctxtStack.push(mask.columns({std::stol(symbol)}).deepCopy());
     }
   }
   assertEq<LogicError>(1UL,
