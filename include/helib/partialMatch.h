@@ -91,7 +91,6 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
   mask.inPlaceTranspose();
   mask = mask.columns(columns);
   mask.inPlaceTranspose();
-  HELIB_NTIMER_START(calculatemasks);
   // FIXME: Avoid deep copy
   // Ptxt Query
   if constexpr (std::is_same_v<TXT, Ptxt<BGV>>) {
@@ -107,8 +106,6 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
         .apply([&](auto& entry) { mapTo01(ea, entry); })
         .apply([](auto& entry) { entry.negate(); })
         .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
-    HELIB_NTIMER_STOP(calculatemasks);
-    printNamedTimer(std::cout, "calculatemasks");
     return mask;
   }
 }
