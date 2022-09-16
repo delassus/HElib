@@ -630,15 +630,15 @@ private:
       for (size_t j = 0; j < expr[i].size(); ++j) // Each column index
       {
         // column should not already have been seen in this clause
-        assertTrue(M(abs(expr[i][j]) - 1, 0) == 0,
-                   "Column " + std::to_string(abs(expr[i][j]) - 1) +
+        assertTrue(M(std::abs(expr[i][j]) - 1, 0) == 0,
+                   "Column " + std::to_string(std::abs(expr[i][j]) - 1) +
                        " repeated in clause " + std::to_string(i) +
                        ", function called without Tidy().");
         // add one to the offset for each NOT
         if (expr[i][j] < 0)
           mus[i] += 1;
         // mark NOT columns as -1, columns as 1
-        M(abs(expr[i][j]) - 1, 0) = ((expr[i][j] >= 0) ? 1 : -1);
+        M(std::abs(expr[i][j]) - 1, 0) = ((expr[i][j] >= 0) ? 1 : -1);
       }
       taus.push_back(std::move(M));
     }
