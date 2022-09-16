@@ -887,7 +887,7 @@ TEST_P(TestPartialMatch, databaseLookupContainsOnStringsPtxtMatchesCtxt)
   const helib::QueryExpr& weight = helib::makeQueryExpr(3);
 
   // !(0 && (1 || 2 && !3) logically equiv to 0 1 ! 2 3 ! && ! && ! && !
-  helib::QueryBuilder qb(!(name && (age || height && !weight)));
+  helib::QueryBuilder qb(!(name && (age || (height && !weight))));
   qb.removeOr();
 
   auto clean = [](auto& x) { x.cleanUp(); };
