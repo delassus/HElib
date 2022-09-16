@@ -20,8 +20,7 @@
  *   class Table "and its full contents"
  *   inline QueryType pseudoParser(const std::string& s)
  *   inline QueryType pseudoParserFromFile(const std::string& filename)
- *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string&
- * s)
+ *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string& s)
  *
  * Modified:
  *   Functions added to QueryBuilder class
@@ -129,14 +128,16 @@ class Not : public Expr
 {
 public:
   /**
-   * @brief Function for returning the logical NOT expression where the NOT
-   * operation is represented by `-` and each operand * is a column number.
-   * @return A string representing the NOT expression, where i- is not column i
+   * @brief Function for returning the logical `NOT` expression in reverse
+   * polish notation where the `NOT` operation is represented by `!` and each
+   * operand is a column number.
+   * @return A string representing the `NOT` expression in reverse polish
+   * notation.
    **/
   std::string eval() const override { return p.exp->eval() + " !"; }
   /**
    * @brief Constructor.
-   * @param p The operand of the expression.
+   * @param exp The operand of the expression.
    **/
   Not(const QueryExpr& exp) : p(exp) {}
 
@@ -208,10 +209,10 @@ private:
   QueryExpr rhs;
 };
 /**
- * @brief Overloaded operator for creating a shared pointer to a NOT
+ * @brief Overloaded operator for creating a `QueryExpr` to a `NOT`
  * expression.
- * @param p operand of the NOT expression.
- * @return Shared pointer to the class `Not`.
+ * @param p operand of the `NOT` expression.
+ * @return `QueryExpr` with the `NOT` as the `Expr`.
  **/
 inline QueryExpr operator!(const QueryExpr& p)
 {
@@ -318,8 +319,7 @@ struct QueryType
             const std::vector<Matrix<long>>& weights,
             const bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {
-  }
+  {}
 
   /**
    * @brief Constructor.
@@ -334,8 +334,7 @@ struct QueryType
             std::vector<Matrix<long>>&& weights,
             bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {
-  }
+  {}
 };
 
 /**
@@ -381,7 +380,10 @@ public:
     // lastly form weights
     return this->buildWeights(expr, columns);
   }
-
+  /**
+   * @brief Function for replacing a `QueryBuilder` object with a logically
+   * equivalent 'QueryBuilder` that uses only `AND`s and `NOT`s.
+   */
   void removeOr()
   {
     std::stack<std::string> convertStack;
@@ -389,20 +391,21 @@ public:
     std::istringstream input{query_str};
     std::string symbol;
     while (input >> symbol) {
-      if (!symbol.compare("&&")) {
+      if (symbol == "&&") {
         auto rhs = convertStack.top();
         convertStack.pop();
         auto& lhs = convertStack.top();
         lhs += " " + rhs + " &&";
-      } else if (!symbol.compare("||")) {
+      } else if (symbol == "||") {
+        // A B || is logically equivalent to A ! B ! && !
         auto rhs = convertStack.top();
         convertStack.pop();
         auto& lhs = convertStack.top();
         lhs += " ! " + rhs + " ! && !";
-      } else if (!symbol.compare("!")) {
+      } else if (symbol == "!") {
         convertStack.top() += " !";
       } else {
-        // Should be a number
+        // Operand: should be a number
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
         convertStack.push(symbol);
@@ -514,15 +517,143 @@ private:
     }
     std::cout << "\n";
   }
+  /**
+   * @brief take a string in Reverse Polish Notation and produce a
+   * vector of vectors representing a logically equivalent AND of ORs.
+   * @param s string in RPN, operators given by &&, || or !
+   * @return vecvec a logically equivalent conjunction of disjunctions of
+   * either columns or their negations. (i + 1) corresponds to column i, and
+   * negatives correspond to negations of columns.
+   */
+  vecvec expandOr(const std::string& s) const
+  {
+    std::stack<vecvec> convertStack;
+
+    std::istringstream input{s};
+    std::ostringstream output{}; // TODO: is this needed?
+
+    std::string symbol;
+
+    while (input >> symbol) {
+      if (symbol == "&&") {
+        // Squash the top into penultimate.
+        auto op = convertStack.top();
+        convertStack.pop();
+        auto& top = convertStack.top();
+        top.insert(top.end(), op.begin(), op.end());
+      } else if (symbol == "||") {
+        // Cartesian-esque product
+        auto op1 = convertStack.top();
+        convertStack.pop();
+        auto op2 = convertStack.top();
+        convertStack.pop();
+        vecvec prod;
+        prod.reserve(op1.size() * op2.size());
+        for (const auto& i : op1)
+          for (const auto& j : op2) {
+            auto x = i; // Make the set i U j for every i, j
+            x.insert(x.end(), j.begin(), j.end());
+            prod.push_back(std::move(x));
+          }
+        convertStack.push(std::move(prod));
+      } else if (symbol == "!") {
+        vecvec top = convertStack.top();
+        vecvec clause = negate(top); // negate top of stack
+        convertStack.pop();          // pop
+        convertStack.push(clause);   // push negation
+      } else {
+        // Operand: should be a number
+        assertTrue(isNumber(symbol),
+                   "String is not a number: '" + symbol + "'");
+        convertStack.emplace(
+            vecvec(1, {std::stol(symbol) + 1})); // using 1 ordering temporarily
+      }
+    }
+
+    // Now read answer off stack (should be size == 1).
+    assertEq<LogicError>(1UL,
+                         convertStack.size(),
+                         "Size of stack after expandOr should be 1");
+
+    return std::move(convertStack.top());
+  }
 
   /**
-   * @brief Given a vecvec intepreted as an and of ors, return a vecvec
-   * corresponding to the negation.
+   * @brief Given a vecvec where outer clauses correspond to ANDs and inner
+   * clauses correspond to ORs, deletes duplicated columns and columns for which
+   * both positive and negation occur from inner clauses, and deletes empty
+   * clauses, inplace.
+   * @param expr a vecvec corresponding to CNF.
+   */
+  void tidy(vecvec& expr) const
+  {
+    vecvec x;
+    for (auto& y : expr) {
+      tidyClause(y);
+      if (y.size() != 0)
+        x.push_back(y);
+    }
+    expr = x;
+  }
+
+  /**
+   * @brief build the weights for a query given as an AND of ORs.
+   * @param expr inner groups correspond to ORs, and we take the AND across
+   * all inner groups. (i + 1) corresponds to column i, and negatives to
+   * negations.
+   * @param columns The number of columns in the database.
+   * @return QueryType with the correct weights.
+   */
+  QueryType buildWeights(const vecvec& expr, const long columns) const
+  {
+    assertTrue(expr.size() > 0, "Cannot build weights for an empty query.");
+    bool containsOR = false;
+
+    vecvec Fs(expr.size());
+    {
+      std::vector<long> v(columns);
+      std::iota(v.begin(), v.end(), 0);
+      std::fill(Fs.begin(), Fs.end(), v);
+    }
+    std::vector<long> mus(expr.size(), 1);
+    std::vector<Matrix<long>> taus;
+    taus.reserve(expr.size());
+
+    // Create the taus
+    for (size_t i = 0; i < expr.size(); ++i) { // Each tau
+      assertTrue(expr[i].size() > 0,
+                 "empty clause found at index " + std::to_string(i) +
+                     ", function called without Tidy().");
+      mus[i] = 0;                 // Set mu to zero.
+      Matrix<long> M(columns, 1); // Create temp tau matrix
+      containsOR = (expr[i].size() > 1) ? true : containsOR;
+      for (size_t j = 0; j < expr[i].size(); ++j) // Each column index
+      {
+        // column should not already have been seen in this clause
+        assertTrue(M(abs(expr[i][j]) - 1, 0) == 0,
+                   "Column " + std::to_string(abs(expr[i][j]) - 1) +
+                       " repeated in clause " + std::to_string(i) +
+                       ", function called without Tidy().");
+        // add one to the offset for each NOT
+        if (expr[i][j] < 0)
+          mus[i] += 1;
+        // mark NOT columns as -1, columns as 1
+        M(abs(expr[i][j]) - 1, 0) = ((expr[i][j] >= 0) ? 1 : -1);
+      }
+      taus.push_back(std::move(M));
+    }
+    return QueryType(std::move(Fs),
+                     std::move(mus),
+                     std::move(taus),
+                     containsOR);
+  }
+  /**
+   * @brief Given a vecvec intepreted as an AND of ORs, return a vecvec
+   * corresponding to the negation. Called by expandOr()
    */
   vecvec negate(const vecvec& clause) const
   {
-    // use de Morgan's law to negate a clause which is an and of ors and return
-    // another and of ors
+    // We build the negation clause by clause
     vecvec notclause = {{}};
     for (const auto& i : clause) {
       // i = {a,b,c,...}. Negate this, to give {{-a},{-b},{-c},...}
@@ -544,135 +675,9 @@ private:
     }
     return notclause;
   }
-  /**
-   * @brief take a string in reverse polish notation and produce a
-   * vector of vectors representing a logically equivalent and of ors.
-   * @param s string in RPN, operators given by &&, || or !
-   * @return vecvec a logically equivalent conjunction of disjunctions of
-   * either columns or their negations. (i + 1) corresponds to column i, and
-   * negatives correspond to negations.
-   */
-  vecvec expandOr(const std::string& s) const
-  {
-    std::stack<vecvec> convertStack;
-
-    std::istringstream input{s};
-    std::ostringstream output{};
-
-    std::string symbol;
-
-    while (input >> symbol) {
-      if (symbol == "&&") {
-        // Squash the top into penultimate.
-        auto op = convertStack.top();
-        convertStack.pop();
-        auto& top = convertStack.top();
-        top.insert(top.end(), op.begin(), op.end());
-      } else if (!symbol.compare("||")) {
-        // Cartesian-esque product
-        auto op1 = convertStack.top();
-        convertStack.pop();
-        auto op2 = convertStack.top();
-        convertStack.pop();
-        vecvec prod;
-        prod.reserve(op1.size() * op2.size());
-        for (const auto& i : op1)
-          for (const auto& j : op2) {
-            auto x = i; // Make the set i U j for every i, j
-            x.insert(x.end(), j.begin(), j.end());
-            prod.push_back(std::move(x));
-          }
-        convertStack.push(std::move(prod));
-      } else if (!symbol.compare("!")) {
-        vecvec top = convertStack.top();
-        vecvec clause = negate(top); // negate top of stack
-        convertStack.pop();          // pop
-        convertStack.push(clause);   // push negation
-      } else {
-        // Assume it is a number. But sanity check anyway.
-        assertTrue(isNumber(symbol),
-                   "String is not a number: '" + symbol + "'");
-        convertStack.emplace(
-            vecvec(1, {std::stol(symbol) + 1})); // using 1 ordering temporarily
-      }
-    }
-
-    // Now read answer off stack (should be size == 1).
-    assertEq<LogicError>(1UL,
-                         convertStack.size(),
-                         "Size of stack after expandOr should be 1");
-
-    return std::move(convertStack.top());
-  }
-  /**
-   * @brief build the weights for a query given as an and of ors.
-   * @param expr inner groups correspond to ors, and we take the and across
-   * all inner groups. (i + 1) corresponds to column i, and negatives to
-   * negations.
-   * @param columns The number of columns in the database.
-   * @return QueryType with the correct weights.
-   */
-  QueryType buildWeights(const vecvec& expr, const long columns) const
-  {
-    bool containsOR = false;
-
-    vecvec Fs(expr.size());
-    {
-      std::vector<long> v(columns);
-      std::iota(v.begin(), v.end(), 0);
-      std::fill(Fs.begin(), Fs.end(), v);
-    }
-    std::vector<long> mus(expr.size(), 1);
-    std::vector<Matrix<long>> taus;
-    taus.reserve(expr.size());
-
-    // Create the taus
-    for (long i = 0; i < long(expr.size()); ++i) { // Each tau
-      assertTrue(expr[i].size() > 0,
-                 "empty clause found at index " + std::to_string(i) +
-                     ", function called without Tidy().");
-      mus[i] = 0;                 // Set mu to zero.
-      Matrix<long> M(columns, 1); // Create temp tau matrix
-      containsOR = (expr[i].size() > 1) ? true : containsOR;
-      for (long j = 0; j < long(expr[i].size()); ++j) // Each column index
-      {
-        // column should not already have been seen in this clause
-        assertTrue(M(abs(expr[i][j]) - 1, 0) == 0,
-                   "repeat column found at index " + std::to_string(i) +
-                       "for column " + std::to_string(j) +
-                       ", function called without Tidy().");
-        // add one to the offset for each not
-        if (expr[i][j] < 0)
-          mus[i] += 1;
-        // mark "not" columns as -1, columns as 1
-        M(abs(expr[i][j]) - 1, 0) = ((expr[i][j] >= 0) ? 1 : -1);
-      }
-      taus.push_back(std::move(M));
-    }
-    return QueryType(std::move(Fs),
-                     std::move(mus),
-                     std::move(taus),
-                     containsOR);
-  }
-  /*
-  Makes the following changes in place:
-  - deletes duplicate variables from each inner clause
-  - deletes variable and negation when both appear in an inner clause
-  - deletes clauses which are empty
-  */
-  void tidy(vecvec& expr) const
-  {
-    vecvec x;
-    for (auto& y : expr) {
-      tidyClause(y);
-      if (y.size() != 0)
-        x.push_back(y);
-    }
-    expr = x;
-  }
   /*
   tidies an inner clause in place by deleting duplicate columns and removing
-  columns for which both the column and it's negation appear
+  columns for which both the column and it's negation appear. Called by Tidy()
   */
   void tidyClause(std::vector<long>& clause) const
   {

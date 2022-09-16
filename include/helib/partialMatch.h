@@ -54,12 +54,10 @@ inline Matrix<TXT> calculateMasks(const EncryptedArray& ea,
   mask.inPlaceTranspose();
   mask = mask.columns(columns);
   mask.inPlaceTranspose();
-
   (mask -= database)
       .apply([&](auto& entry) { mapTo01(ea, entry); })
       .apply([](auto& entry) { entry.negate(); })
       .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
-
   return mask;
 }
 
@@ -93,7 +91,7 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
   mask.inPlaceTranspose();
   mask = mask.columns(columns);
   mask.inPlaceTranspose();
-
+  HELIB_NTIMER_START(calculatemasks);
   // FIXME: Avoid deep copy
   // Ptxt Query
   if constexpr (std::is_same_v<TXT, Ptxt<BGV>>) {
@@ -109,7 +107,8 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
         .apply([&](auto& entry) { mapTo01(ea, entry); })
         .apply([](auto& entry) { entry.negate(); })
         .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
-
+    HELIB_NTIMER_STOP(calculatemasks);
+    printNamedTimer(std::cout, "calculatemasks");
     return mask;
   }
 }
@@ -230,19 +229,6 @@ public:
       context(std::shared_ptr<const helib::Context>(&c, [](auto UNUSED p) {}))
   {
   }
-  /**
-   * @brief Overloaded function for performing a database lookup given a query
-   *  expression and query data.
-   * @tparam TXT2 The type of the query data, can be either a `Ctxt` or
-   * `Ptxt<BGV>`.
-   * @param lookup_query The lookup query expression to perform.
-   * @param query_data The lookup query data to compare with the database.
-   * @return A `Matrix<TXT2>` containing 1s and 0s in slots where there was a
-   * match or no match respectively.
-   **/
-  template <typename TXT2>
-  auto contains(const std::string& query_string,
-                const Matrix<TXT2>& query_data) const;
 
   /**
    * @brief Overloaded function for performing a database lookup given a query
@@ -251,11 +237,29 @@ public:
    * `Ptxt<BGV>`.
    * @param lookup_query The lookup query expression to perform.
    * @param query_data The lookup query data to compare with the database.
+   * TODO: will only return TXT2 if database is not "more encrypted" that query
+   *data?
    * @return A `Matrix<TXT2>` containing 1s and 0s in slots where there was a
    * match or no match respectively.
    **/
   template <typename TXT2>
   auto contains(const QueryType& lookup_query,
+                const Matrix<TXT2>& query_data) const;
+
+  /**
+   * @brief Overloaded function for performing a database lookup given a query
+   *  string and query data.
+   * @tparam TXT2 The type of the query data, can be either a `Ctxt` or
+   * `Ptxt<BGV>`.
+   * @param lookup_query A query string in RPN with only ANDs and NOTs
+   * @param query_data The lookup query data to compare with the database.
+   * TODO: will only return TXT2 if database is not "more encrypted" that query
+   *data?
+   * @return A `Matrix<TXT2>` containing 1s and 0s in slots where there was a
+   * match or no match respectively.
+   **/
+  template <typename TXT2>
+  auto contains(const std::string& query_string,
                 const Matrix<TXT2>& query_data) const;
 
   /**
@@ -283,12 +287,8 @@ public:
 private:
   Matrix<TXT> data;
   std::shared_ptr<const Context> context;
-  bool isNumber(const std::string& s) const
-  {
-    // Positive only
-    return std::all_of(s.begin(), s.end(), ::isdigit);
-  }
 };
+
 template <typename TXT>
 template <typename TXT2>
 inline auto Database<TXT>::contains(const std::string& query_string,
@@ -308,11 +308,11 @@ inline auto Database<TXT>::contains(const std::string& query_string,
   std::string symbol;
 
   while (input >> symbol) {
-    if (!symbol.compare("!")) {
+    if (symbol == "!") {
       auto& top = ctxtStack.top();
       top.apply([&](auto& entry) { entry.negate(); });
       top.apply([&](auto& entry) { entry.addConstant(NTL::ZZX(1L)); });
-    } else if (!symbol.compare("&&")) {
+    } else if (symbol == "&&") {
       auto rhs = ctxtStack.top();
       ctxtStack.pop();
       auto& lhs = ctxtStack.top();
@@ -324,9 +324,9 @@ inline auto Database<TXT>::contains(const std::string& query_string,
           });
     } else {
       // If symbol is ||, throw a specific error
-      assertFalse(
-          symbol == "||",
-          "Cannot evaluate contains() on a string which contains Or operator");
+      assertFalse(symbol == "||",
+                  "Cannot evaluate contains() on a string which contains Or "
+                  "operator: first call removeOr()");
       // Otherwise, verify symbol is a number
       assertTrue(isNumber(symbol), "String is not a number: '" + symbol + "'");
       // And verify the number is in [0,...,columns - 1]

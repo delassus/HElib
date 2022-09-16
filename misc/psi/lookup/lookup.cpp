@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
       "Flag to signify input is in column format.", nullptr)
     .parse(argc, argv);
   // clang-format on
-  std::ofstream cout(cmdLineOpts.outFilePath);
+  
   if (cmdLineOpts.nthreads < 1) {
     std::cerr << "Number of threads must be a postive integer. Setting n = 1."
               << std::endl;
@@ -100,90 +100,6 @@ int main(int argc, char* argv[])
   const helib::QueryExpr& b = helib::makeQueryExpr(1);
   const helib::QueryExpr& c = helib::makeQueryExpr(2);
 
-  helib::QueryBuilder qbDoubleVars(a || !a);
-  helib::QueryBuilder qbNotofOr1(!(a || b || c));
-  helib::QueryBuilder qbNotofOr2(!(a || b) && c);
-  helib::QueryBuilder qbDoubleNot1(!!a);
-  helib::QueryBuilder qbDoubleNot2(b || !!a);
-  helib::QueryBuilder qbNotofAnd1(!(a && b && c));
-  helib::QueryBuilder qbNotofAnd2(!((a || b) && (b || c)));
-
-  qbDoubleVars.removeOr();
-  std::cout << qbDoubleVars.getQueryString() << "\n";
-  qbNotofOr1.removeOr();
-  std::cout << qbNotofOr1.getQueryString() << "\n";
-  qbNotofOr2.removeOr();
-  std::cout << qbNotofOr2.getQueryString() << "\n";
-  qbDoubleNot1.removeOr();
-  std::cout << qbDoubleNot1.getQueryString() << "\n";
-  qbDoubleNot2.removeOr();
-  std::cout << qbDoubleNot2.getQueryString() << "\n";
-  qbNotofAnd1.removeOr();
-  std::cout << qbNotofAnd2.getQueryString() << "\n";
-  qbNotofAnd2.removeOr();
-  std::cout << qbNotofAnd2.getQueryString() << "\n";
-
-  helib::QueryType queryDoubleVars = qbDoubleVars.build(database.columns());
-  helib::QueryType queryNotofOr1 = qbNotofOr1.build(database.columns());
-  helib::QueryType queryNotofOr2 = qbNotofOr2.build(database.columns());
-  helib::QueryType queryDoubleNot1 = qbDoubleNot1.build(database.columns());
-  helib::QueryType queryDoubleNot2 = qbDoubleNot2.build(database.columns());
-  helib::QueryType queryNotofAnd1 = qbNotofAnd1.build(database.columns());
-  helib::QueryType queryNotofAnd2 = qbNotofAnd2.build(database.columns());
-
-  auto clean = [](auto& x) { x.cleanUp(); };
-
-  HELIB_NTIMER_START(lookupDoubleVars);
-  auto doubleVars = database.contains(qbDoubleVars, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupDoubleVars);  
-
-  HELIB_NTIMER_START(lookupNotofOr1);
-  auto NotofOr1 = database.contains(qbNotofOr1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupNotofOr1);
-
-  HELIB_NTIMER_START(lookupNotofOr2);
-  auto NotofOr2 = database.contains(qbNotofOr2, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupNotofOr2);
-
-  HELIB_NTIMER_START(lookupdoubleNot1);
-  auto doubleNot1 = database.contains(qbDoubleNot1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupdoubleNot1);
-
-  HELIB_NTIMER_START(lookupdoubleNot2);
-  auto doubleNot2 = database.contains(qbDoubleNot2, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupdoubleNot2);
-
-  HELIB_NTIMER_START(lookupNotofAnd1);
-  auto NotofAnd1 = database.contains(qbNotofAnd1, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupNotofAnd1);
-
-  HELIB_NTIMER_START(lookupNotofAnd2);
-  auto NotofAnd2 = database.contains(qbNotofAnd2, queryData).apply(clean);
-  HELIB_NTIMER_STOP(lookupNotofAnd2);
-
-  HELIB_NTIMER_START(writeResults);
-  // Write results to file
-  writeResultsToFile(cmdLineOpts.outFilePath + "_doubleVars",
-                     doubleVars,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr1",
-                     NotofOr1,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofOr2",
-                     NotofOr2,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_doubleNot1",
-                     doubleNot1,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_doubleNot2",
-                     doubleNot2,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofAnd1",
-                     NotofAnd1,
-                     cmdLineOpts.offset);
-  writeResultsToFile(cmdLineOpts.outFilePath + "_NotofAnd2",
-                     NotofAnd2,cmdLineOpts.offset);
-  
   helib::QueryBuilder qb(a);
   helib::QueryBuilder qbAnd(a && b);
   helib::QueryBuilder qbOr(a || b);

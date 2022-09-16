@@ -886,10 +886,9 @@ TEST_P(TestPartialMatch, databaseLookupContainsOnStringsPtxtMatchesCtxt)
   const helib::QueryExpr& height = helib::makeQueryExpr(2);
   const helib::QueryExpr& weight = helib::makeQueryExpr(3);
 
-  // !(0 && (1 || 2 && !3)
+  // !(0 && (1 || 2 && !3) logically equiv to 0 1 ! 2 3 ! && ! && ! && !
   helib::QueryBuilder qb(!(name && (age || height && !weight)));
   qb.removeOr();
-  std::cout << qb.getQueryString() << "\n";
 
   auto clean = [](auto& x) { x.cleanUp(); };
   auto plaintext_result = database.contains(qb.getQueryString(), plaintext_query_data);

@@ -40,32 +40,140 @@ function teardown {
 }
 
 @test "lookup 64 threads" {
-  
+  skip 
   echo "lookup 64 threads" > README
   $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=64
 
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_a -o "result.ptxt_a"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_!a -o "result.ptxt_!a"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_b -o "result.ptxt_b"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_c -o "result.ptxt_c"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand1 -o "result.ptxt_expand1"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand2 -o "result.ptxt_expand2"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand3 -o "result.ptxt_expand3"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_!bAndc_Or_!a -o "result.ptxt_!bAndc_Or_!a"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aOr_!bAndc -o "result.ptxt_aOr_!bAndc"
-  # $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_aAnd!b -o "result.ptxt_aAnd!b"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand1 -o "result.ptxt_expand"  
 
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doublevars -o "result.ptxt_doublevars"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofOr1 -o "result.ptxt_NotofOr1"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofOr2 -o "result.ptxt_NotofOr2"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doubleNot1 -o "result.ptxt_doubleNot1"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_doubleNot2 -o "result.ptxt_doubleNot2"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofAnd1 -o "result.ptxt_NotofAnd1"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_NotofAnd2 -o "result.ptxt_NotofAnd2"
-  
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 32 threads" {
+  skip
+  echo "lookup 32 threads" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=32
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
+
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 16 threads" {
+  skip
+  echo "lookup 16 threads" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=16
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
+
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 8 threads" {
+  skip
+  echo "lookup 8 threads" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=8
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
+
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 4 threads" {
+  skip
+  echo "lookup 4 threads" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=4
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
+
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 2 threads" {
+  skip
+  echo "lookup 2 threads" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=2
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
+
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test OR > "expected.mask_or"
+  ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test EXPAND > "expected.mask_expand"
+
+  diff "result.ptxt" "expected.mask"
+  diff "result.ptxt_and" "expected.mask_and"
+  diff "result.ptxt_or" "expected.mask_or"
+  diff "result.ptxt_expand" "expected.mask_expand"
+}
+
+@test "lookup 1 thread" {
+  skip
+  echo "lookup 1 thread" > README
+  $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=1
+
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"
 
   ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
   ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
