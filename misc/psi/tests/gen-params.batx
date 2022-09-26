@@ -83,8 +83,8 @@ function create-serious-lookup-params {
 @test "generate params and encrypt query and database" {
   # Delete the existing data and params directory.
   rm -rf ../$datadir
-#  create-toy-lookup-params
-  create-serious-lookup-params
+  create-toy-lookup-params
+#  create-serious-lookup-params
   createContext BGV "${prefix_bgv}.params" "$prefix_bgv" "--frob-skm"
   # Encrypt the database and query
   $encrypt ${prefix_bgv}.pk ${db_encoded} -o "db.ctxt"

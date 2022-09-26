@@ -109,7 +109,7 @@ Matrix<Ctxt> calculateMasks(const EncryptedArray& ea,
         .apply([&](auto& entry) { mapTo01(ea, entry); })
         .apply([](auto& entry) { entry.negate(); })
         .apply([](auto& entry) { entry.addConstant(NTL::ZZX(1l)); });
-        
+
     return mask;
   }
 }
@@ -213,7 +213,8 @@ public:
    **/
   Database(const Matrix<TXT>& M, std::shared_ptr<const Context> c) :
       data(M), context(c)
-  {}
+  {
+  }
 
   // FIXME: Should this option really exist?
   /**
@@ -227,7 +228,8 @@ public:
   Database(const Matrix<TXT>& M, const Context& c) :
       data(M),
       context(std::shared_ptr<const helib::Context>(&c, [](auto UNUSED p) {}))
-  {}
+  {
+  }
 
   /**
    * @brief Overloaded function for performing a database lookup given a query

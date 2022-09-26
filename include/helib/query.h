@@ -20,7 +20,8 @@
  *   class Table "and its full contents"
  *   inline QueryType pseudoParser(const std::string& s)
  *   inline QueryType pseudoParserFromFile(const std::string& filename)
- *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string& s)
+ *   inline void addSpacesAroundChars(std::stringstream& ss, const std::string&
+ * s)
  *
  * Modified:
  *   Functions added to QueryBuilder class
@@ -319,7 +320,8 @@ struct QueryType
             const std::vector<Matrix<long>>& weights,
             const bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 
   /**
    * @brief Constructor.
@@ -334,7 +336,8 @@ struct QueryType
             std::vector<Matrix<long>>&& weights,
             bool isThereAnOR) :
       Fs(index_sets), mus(offsets), taus(weights), containsOR(isThereAnOR)
-  {}
+  {
+  }
 };
 
 /**

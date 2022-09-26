@@ -70,7 +70,8 @@ protected:
                  addFrbMatrices(secretKey),
                  secretKey)),
       ea(context.getEA())
-  {}
+  {
+  }
 
   virtual void SetUp() override
   {
@@ -816,7 +817,7 @@ TEST_P(TestPartialMatch, databaseLookupWorksWithQueryAPIWithNot)
 
   // !(0 && (1 || (2 && !3))
   helib::QueryBuilder qb(!(name && (age || (height && !weight))));
-  
+
   long columns = plaintext_database.dims(1);
 
   helib::QueryType lookup_query(qb.build(columns));
@@ -891,8 +892,10 @@ TEST_P(TestPartialMatch, databaseLookupContainsOnStringsPtxtMatchesCtxt)
   qb.removeOr();
 
   auto clean = [](auto& x) { x.cleanUp(); };
-  auto plaintext_result = database.contains(qb.getQueryString(), plaintext_query_data);
-  auto encrypted_result = database.contains(qb.getQueryString(), encrypted_query_data).apply(clean);
+  auto plaintext_result =
+      database.contains(qb.getQueryString(), plaintext_query_data);
+  auto encrypted_result =
+      database.contains(qb.getQueryString(), encrypted_query_data).apply(clean);
 
   // Decrypt the result
   helib::Matrix<helib::Ptxt<helib::BGV>> results(

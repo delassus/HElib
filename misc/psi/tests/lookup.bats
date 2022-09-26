@@ -40,14 +40,14 @@ function teardown {
 }
 
 @test "lookup 64 threads" {
-  skip 
+  skip
   echo "lookup 64 threads" > README
   $lookup ${data_prefix}/${prefix_bgv}.pk $data_prefix/db.ctxt $data_prefix/query.ctxt result.ctxt -n=64
 
   $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt -o "result.ptxt"
   $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_and -o "result.ptxt_and"
   $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_or -o "result.ptxt_or"
-  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand1 -o "result.ptxt_expand"  
+  $decrypt ${data_prefix}/${prefix_bgv}.sk result.ctxt_expand -o "result.ptxt_expand"  
 
   ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test SAME > "expected.mask"
   ../gen-expected-mask.py ${query_encoded} ${db_encoded} --mod-p $modulus --test AND > "expected.mask_and"
