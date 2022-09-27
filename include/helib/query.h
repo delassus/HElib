@@ -719,7 +719,7 @@ private:
       }
     }
     clause.clear();
-    for (auto& i : newclause) {
+    for (const auto& i : newclause) {
       if (vars.find(-1 * i) == vars.end())
         clause.push_back(i);
     }
