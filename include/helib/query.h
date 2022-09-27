@@ -605,7 +605,7 @@ private:
   }
 
   /**
-   * @brief Given a vecvec where outer clauses correspond to ANDs and inner
+   * @brief Given a `vecvec` where outer clauses correspond to ANDs and inner
    * clauses correspond to ORs, deletes duplicated columns and columns for which
    * both positive and negation occur from inner clauses, and deletes empty
    * clauses, inplace.
