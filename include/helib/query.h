@@ -545,7 +545,7 @@ private:
   }
   /**
    * @brief Take a string in Reverse Polish Notation and produce a
-   * vector of vectors representing a logically equivalent AND of ORs.
+   * vector of vectors representing a logically equivalent `AND` of `OR`s.
    * @param s string in RPN, operators given by &&, || or !
    * @return vecvec a logically equivalent conjunction of disjunctions of
    * either columns or their negations. (i + 1) corresponds to column i, and
