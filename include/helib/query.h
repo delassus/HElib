@@ -544,7 +544,7 @@ private:
     std::cout << "\n";
   }
   /**
-   * @brief take a string in Reverse Polish Notation and produce a
+   * @brief Take a string in Reverse Polish Notation and produce a
    * vector of vectors representing a logically equivalent AND of ORs.
    * @param s string in RPN, operators given by &&, || or !
    * @return vecvec a logically equivalent conjunction of disjunctions of
