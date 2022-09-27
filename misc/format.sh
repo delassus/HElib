@@ -41,13 +41,13 @@ function echo_header {
 }
 
 echo "Using '${FORMAT_CMD}' to perform formatting."
-arg="-regextype posix-egrep"
+arg_and_path=". -regextype posix-egrep"
 # find command differs between Mac and Linux
 if [ "$(uname)" == "Darwin" ]; then
-  arg="-E"
+  arg_and_path="-E ."
 fi
 previous_dir=""
-for file in $(find $arg -type f -regex '.*\.(c|h|cpp|hpp)' . \
+for file in $(find $arg_and_path -type f -regex '.*\.(c|h|cpp|hpp)' \
               ! -path '*/misc/*' \
               ! -path '*/build/*' \
               ! -path '*/dependencies/*' \
