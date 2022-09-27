@@ -709,7 +709,7 @@ private:
   {
     std::unordered_set<long> vars;
     std::vector<long> newclause;
-    for (auto& i : clause) {
+    for (const auto& i : clause) {
       if (vars.find(i) == vars.end()) {
         newclause.push_back(i);
         vars.insert(i);
