@@ -623,7 +623,7 @@ private:
   }
 
   /**
-   * @brief build the weights for a query given as an AND of ORs.
+   * @brief Build the weights for a query given as an `AND` of `OR`s.
    * @param expr inner groups correspond to ORs, and we take the AND across
    * all inner groups. (i + 1) corresponds to column i, and negatives to
    * negations.
