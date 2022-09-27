@@ -55,7 +55,8 @@ struct WithCloneMethod
       somePtr1(new int(r)),
       somePtr2(std::make_unique<int>(u)),
       somePtr3(std::make_shared<int>(s))
-  {}
+  {
+  }
 
   WithCloneMethod* clone() const
   {
@@ -72,7 +73,8 @@ struct Copyable
   Copyable() = delete;
   Copyable(int i, int r, int s) :
       someInt(i), rawPtr(new int(r)), shrPtr(std::make_shared<int>(s))
-  {}
+  {
+  }
   Copyable(const Copyable&) = default;
   Copyable(Copyable&&) = delete;
   Copyable& operator=(const Copyable&) = delete;

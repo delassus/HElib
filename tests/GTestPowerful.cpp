@@ -29,7 +29,8 @@ struct Parameters
 
   Parameters(long m1, long m2, long m3, long p, long r) :
       m1(m1), m2(m2), m3(m3), p(p), r(r)
-  {}
+  {
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const Parameters& params)
   {
@@ -75,7 +76,8 @@ protected:
                   .r(r)
                   .buildModChain(false)
                   .build())
-  {}
+  {
+  }
 
   virtual void SetUp() override { context.buildModChain(/*L=*/100, /*c=*/3); }
 

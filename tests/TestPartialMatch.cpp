@@ -18,7 +18,7 @@
  *
  * Added:
  *   TEST_P(TestPartialMatch, databaseLookupContainsOnStringsPtxtMatchesCtxt)
- *   TEST_P(TestPartialMatch, databaseLookupWorksWithQueryAPIWithNot)   
+ *   TEST_P(TestPartialMatch, databaseLookupWorksWithQueryAPIWithNot)
  */
 
 #include <bitset>

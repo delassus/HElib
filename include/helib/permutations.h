@@ -410,7 +410,8 @@ public:
 
   GenDescriptor(long _order, bool _good, long gen = 0) :
       genIdx(gen), order(_order), good(_good)
-  {}
+  {
+  }
 
   GenDescriptor() {}
 };

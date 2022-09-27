@@ -157,7 +157,8 @@ protected:
       publicKey(
           (secretKey.GenSecKey(), addSome1DMatrices(secretKey), secretKey)),
       ea(context.getEA())
-  {}
+  {
+  }
 
   virtual void SetUp() override
   {
@@ -192,7 +193,8 @@ protected:
       publicKey(
           (secretKey.GenSecKey(), addSome1DMatrices(secretKey), secretKey)),
       ea(context.getEA())
-  {}
+  {
+  }
 
   virtual void SetUp() override
   {

@@ -257,7 +257,8 @@ public:
   template <typename T>
   Ptxt(const Context& context, const std::vector<T>& data) :
       Ptxt<Scheme>(context, convertDataToSlotVector<T, Scheme>(data, context))
-  {}
+  {
+  }
 
   /**
    *  @brief Default copy constructor.
@@ -854,7 +855,7 @@ public:
 
   friend std::istream& operator>><Scheme>(std::istream& is, Ptxt& ptxt);
 
-  friend std::ostream& operator<<<Scheme>(std::ostream& os, const Ptxt& ptxt);
+  friend std::ostream& operator<< <Scheme>(std::ostream& os, const Ptxt& ptxt);
 
   /**
    * @brief Conversion function from `long` to `SlotType`.

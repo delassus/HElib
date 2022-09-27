@@ -70,7 +70,8 @@ protected:
                   .r(r)
                   .buildModChain(false)
                   .buildPtr())
-  {}
+  {
+  }
 
   const unsigned long m;
   const unsigned long p;
@@ -90,7 +91,8 @@ protected:
                   .precision(r)
                   .buildModChain(false)
                   .buildPtr())
-  {}
+  {
+  }
 
   const unsigned long m;
   const unsigned long r;

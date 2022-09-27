@@ -52,7 +52,8 @@ protected:
                   .c(2)
                   .build()),
       eacx(context.getEA().getCx())
-  {}
+  {
+  }
 
   virtual void SetUp() override
   {

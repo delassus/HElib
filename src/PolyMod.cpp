@@ -24,11 +24,13 @@ namespace helib {
 PolyMod::PolyMod() : ringDescriptor(nullptr) {}
 PolyMod::PolyMod(const std::shared_ptr<PolyModRing>& ringDescriptor) :
     PolyMod(NTL::ZZX(0), ringDescriptor)
-{}
+{
+}
 PolyMod::PolyMod(long input,
                  const std::shared_ptr<PolyModRing>& ringDescriptor) :
     PolyMod(NTL::ZZX(input), ringDescriptor)
-{}
+{
+}
 PolyMod::PolyMod(const std::vector<long>& input,
                  const std::shared_ptr<PolyModRing>& ringDescriptor) :
     PolyMod(ringDescriptor)

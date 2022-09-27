@@ -17,7 +17,8 @@ namespace helib {
 
 PolyModRing::PolyModRing(long p, long r, const NTL::ZZX& G) :
     p(p), r(r), G(G), p2r(pow(p, r))
-{}
+{
+}
 
 bool PolyModRing::operator==(const PolyModRing& rhs) const noexcept
 {

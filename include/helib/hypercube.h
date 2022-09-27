@@ -453,17 +453,20 @@ public:
 
   CubeSlice(NTL::Vec<T>& _data, const CubeSignature& _sig) :
       ConstCubeSlice<T>(_data, _sig)
-  {}
+  {
+  }
 
   // initialize the slice to point to the i-th subcube
   // of the cube pointed to by bigger
   CubeSlice(const CubeSlice<T>& bigger, long i, long _dimOffset = 1) :
       ConstCubeSlice<T>(bigger, i, _dimOffset)
-  {}
+  {
+  }
 
   CubeSlice(HyperCube<T>& _cube, long i, long _dimOffset = 1) :
       ConstCubeSlice<T>(_cube, i, _dimOffset)
-  {}
+  {
+  }
 
   // deep copy of a slice: copies other into this
   void copy(const ConstCubeSlice<T>& other) const;

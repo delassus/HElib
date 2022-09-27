@@ -253,7 +253,8 @@ protected:
                    .build())),
       v_values_name(GetParam().v_values_name)
 
-  {}
+  {
+  }
 
   void TearDown() override
   {

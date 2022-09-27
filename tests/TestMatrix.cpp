@@ -203,7 +203,8 @@ protected:
       sk(context),
       pk((sk.GenSecKey(), sk)),
       ea(context.getEA())
-  {}
+  {
+  }
 
   virtual void SetUp() override
   {

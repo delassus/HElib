@@ -281,7 +281,8 @@ public:
            const IndexSet& s,
            const SKHandle& otherHandle) :
       DoubleCRT(_context, s), skHandle(otherHandle)
-  {}
+  {
+  }
 
   // Copy constructors from the base class
   explicit CtxtPart(const DoubleCRT& other) : DoubleCRT(other)
@@ -291,7 +292,8 @@ public:
 
   CtxtPart(const DoubleCRT& other, const SKHandle& otherHandle) :
       DoubleCRT(other), skHandle(otherHandle)
-  {}
+  {
+  }
 
   /**
    * @brief Write out the `CtxtPart` object in binary format.

@@ -58,7 +58,8 @@ protected:
   // This may be somethng that needs further investigation.
   // This probably has something to do with the slightly
   // different logic in the new encoding functions
-  {}
+  {
+  }
 
   const unsigned long m;
 
@@ -1392,7 +1393,8 @@ protected:
                   .r(r)
                   .buildModChain(false)
                   .build())
-  {}
+  {
+  }
 
   static long power(long base, unsigned long exponent)
   {

@@ -73,7 +73,8 @@ public:
       parent1(pt1),
       parent2(pt2),
       ct(nullptr)
-  {}
+  {
+  }
 
   DAGnode(DAGnode&& other) :
       // move constructor
@@ -84,7 +85,8 @@ public:
       parent1(other.parent1),
       parent2(other.parent2),
       ct(other.ct)
-  {}
+  {
+  }
 
   std::string nodeName() const
   {
@@ -104,7 +106,8 @@ public:
       // move constructor
       used(bool(other.used)),
       ct(std::move(other.ct))
-  {}
+  {
+  }
 };
 
 /**

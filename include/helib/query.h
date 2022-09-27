@@ -34,10 +34,6 @@
  *   inline bool isNumber(const std::string& s) "now a free function"
  *
  *   QueryExpr is now a class instead of an alias
- */
-
-/* Copyright (C) 2022 Intel Corporation
- * SPDX-License-Identifier: Apache-2.0
  *
  * Extended HElib to support the Not operator in queries.
  * Contributions include
@@ -53,10 +49,10 @@
  *
  * Modified:
  *     QueryBuilder:
- *        Moved code out of QueryType build(long columns) const into a utility function 
- *        QueryType buildWeights(const vecvec& expr, const long columns) const
+ *        Moved code out of QueryType build(long columns) const into a utility
+ * function QueryType buildWeights(const vecvec& expr, const long columns) const
  *        modified the code in buildWeights()
- *        vecvec expandOr(const std::string& s) const  
+ *        vecvec expandOr(const std::string& s) const
  */
 
 #ifndef HELIB_QUERY_H
@@ -547,16 +543,16 @@ private:
    * @brief Take a string in Reverse Polish Notation and produce a
    * vector of vectors representing a logically equivalent `AND` of `OR`s.
    * @param s String in RPN, operators given by `&&`, `||` or `!`
-   * @return A `vecvec` representing a logically equivalent conjunction of disjunctions of
-   * either columns or their negations. (i + 1) corresponds to column i, and
-   * negatives correspond to negations of columns.
+   * @return A `vecvec` representing a logically equivalent conjunction of
+   * disjunctions of either columns or their negations. (i + 1) corresponds to
+   * column i, and negatives correspond to negations of columns.
    */
   vecvec expandOr(const std::string& s) const
   {
     std::stack<vecvec> convertStack;
 
     std::istringstream input{s};
-    std::ostringstream output{}; // TODO: is this needed?
+    // std::ostringstream output{}; // TODO: is this needed?
 
     std::string symbol;
 
@@ -592,7 +588,11 @@ private:
         assertTrue(isNumber(symbol),
                    "String is not a number: '" + symbol + "'");
         convertStack.emplace(
-            vecvec(1, {std::stol(symbol) + 1})); // using 1 ordering temporarily
+            vecvec(1,
+                   {std::stol(symbol) + 1})); // using 1 ordering temporarily:
+        // To allow negatives to correspond to nots of columns even when there
+        // is a zero column, column i is temporarily written as (i+1): In
+        // particular, in this line, pushing back {{i + 1}} rather than {{i}}.
       }
     }
 
@@ -606,10 +606,10 @@ private:
 
   /**
    * @brief Given a `vecvec` where outer clauses correspond to ANDs and inner
-   * clauses correspond to ORs, deletes duplicated columns and columns for which
-   * both positive and negation occur from inner clauses, and deletes empty
-   * clauses, inplace.
-   * @param expr A `vecvec` corresponding to CNF.
+   * clauses correspond to ORs, deletes duplicated columns from inner clauses,
+   * deletes a column and it's negation when both appear in an inner clause, and
+   * lastly deletes empty clauses, inplace.
+   * @param expr A `vecvec` corresponding to an `AND` of `OR`s.
    */
   void tidy(vecvec& expr) const
   {
@@ -674,8 +674,13 @@ private:
                      containsOR);
   }
   /**
-   * @brief Given a `vecvec` interpreted as an `AND` of `OR`s, return a `vecvec`
-   * corresponding to the negation. Called by `expandOr()`.
+   * @brief Given a `vecvec` interepreted as an `AND` of `OR`s, return a
+   * `vecvec` corresponding to the negation. Called by `expandOr()`.
+   *
+   * @param clause A `vecvec` of column numbers and negations of column numbers,
+   * with (i+1) corresponding to column i.
+   * @return vecvec A `vecvec` of column numbers and negations of column
+   * numbers, with (i+1) corresponding to column i.
    */
   vecvec negate(const vecvec& clause) const
   {
@@ -701,11 +706,15 @@ private:
     }
     return notclause;
   }
-  
-  /*
-  tidies an inner clause in place by deleting duplicate columns and removing
-  columns for which both the column and it's negation appear. Called by Tidy()
-  */
+
+  /**
+   * @brief Tidies an inner clause in place by deleting duplicate columns and
+   * removing columns for which both the column and it's negation appear. Called
+   * by Tidy()
+   *
+   * @param clause A vector of column labels and negative column labels, where
+   * (i+1) corresponds to column i, and negatives correspond to negations.
+   */
   void tidyClause(std::vector<long>& clause) const
   {
     std::unordered_set<long> vars;

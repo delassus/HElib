@@ -1364,8 +1364,8 @@ public:
    **/
   Context* buildPtr() const;
 
-  friend std::ostream& operator<<<SCHEME>(std::ostream& os,
-                                          const ContextBuilder& cb);
+  friend std::ostream& operator<< <SCHEME>(std::ostream& os,
+                                           const ContextBuilder& cb);
 }; // End of class ContextBuilder
 
 // Default BGV values

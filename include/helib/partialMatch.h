@@ -18,7 +18,8 @@
  * Added:
  *   Database:
  *                 template <typename TXT2>
-              auto contains(const std::string& query_string, const Matrix<TXT2>& query_data) const
+              auto contains(const std::string& query_string, const Matrix<TXT2>&
+ query_data) const
  */
 #ifndef HELIB_PARTIALMATCH_H
 #define HELIB_PARTIALMATCH_H

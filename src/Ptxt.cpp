@@ -33,14 +33,16 @@ std::complex<double> Ptxt<CKKS>::convertToSlot(const Context&, long slot)
 
 template <typename Scheme>
 Ptxt<Scheme>::Ptxt() : context(nullptr)
-{}
+{
+}
 
 template <typename Scheme>
 Ptxt<Scheme>::Ptxt(const Context& context) :
     context(&context),
     slots(context.getEA().size(),
           SlotType{Ptxt<Scheme>::convertToSlot(*(this->context), 0L)})
-{}
+{
+}
 
 template <typename Scheme>
 Ptxt<Scheme>::Ptxt(const Context& context, const SlotType& value) :
@@ -1083,9 +1085,10 @@ std::ostream& operator<<(std::ostream& os, const Ptxt<Scheme>& ptxt)
 }
 
 // Explicit operator << instantiation
-template std::ostream& operator<<<BGV>(std::ostream& os, const Ptxt<BGV>& ptxt);
-template std::ostream& operator<<<CKKS>(std::ostream& os,
-                                        const Ptxt<CKKS>& ptxt);
+template std::ostream& operator<< <BGV>(std::ostream& os,
+                                        const Ptxt<BGV>& ptxt);
+template std::ostream& operator<< <CKKS>(std::ostream& os,
+                                         const Ptxt<CKKS>& ptxt);
 
 // Explicit class instantiation.
 template class Ptxt<BGV>;

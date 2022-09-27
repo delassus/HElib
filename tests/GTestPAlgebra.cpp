@@ -72,7 +72,8 @@ protected:
                   .ords(ords)
                   .buildModChain(false)
                   .build())
-  {}
+  {
+  }
 
   const long m;
   const long p;

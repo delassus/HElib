@@ -34,14 +34,16 @@ namespace helib {
 
 KeySwitch::KeySwitch(long sPow, long xPow, long fromID, long toID, long p) :
     fromKey(sPow, xPow, fromID), toKeyID(toID), ptxtSpace(p)
-{}
+{
+}
 
 KeySwitch::KeySwitch(const SKHandle& _fromKey,
                      UNUSED long fromID,
                      long toID,
                      long p) :
     fromKey(_fromKey), toKeyID(toID), ptxtSpace(p)
-{}
+{
+}
 
 bool KeySwitch::operator==(const KeySwitch& other) const
 {

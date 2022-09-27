@@ -152,11 +152,13 @@ private:
 public:
   MatMul_CKKS(const EncryptedArray& _ea, get_fun_type _get_fun) :
       ea(_ea), get_fun(_get_fun)
-  {}
+  {
+  }
 
   MatMul_CKKS(const Context& context, get_fun_type _get_fun) :
       ea(context.getEA()), get_fun(_get_fun)
-  {}
+  {
+  }
 
   virtual const EncryptedArray& getEA() const override { return ea; }
 
@@ -181,11 +183,13 @@ private:
 public:
   MatMul_CKKS_Complex(const EncryptedArray& _ea, get_fun_type _get_fun) :
       ea(_ea), get_fun(_get_fun)
-  {}
+  {
+  }
 
   MatMul_CKKS_Complex(const Context& context, get_fun_type _get_fun) :
       ea(context.getEA()), get_fun(_get_fun)
-  {}
+  {
+  }
 
   virtual const EncryptedArray& getEA() const override { return ea; }
 
