@@ -628,7 +628,7 @@ private:
    * all inner groups. (i + 1) corresponds to column i, and negatives to
    * negations.
    * @param columns The number of columns in the database.
-   * @return QueryType with the correct weights.
+   * @return `QueryType` with the correct weights.
    */
   QueryType buildWeights(const vecvec& expr, const long columns) const
   {
@@ -674,8 +674,8 @@ private:
                      containsOR);
   }
   /**
-   * @brief Given a vecvec intepreted as an AND of ORs, return a vecvec
-   * corresponding to the negation. Called by expandOr()
+   * @brief Given a `vecvec` interpreted as an `AND` of `OR`s, return a `vecvec`
+   * corresponding to the negation. Called by `expandOr()`.
    */
   vecvec negate(const vecvec& clause) const
   {
@@ -701,6 +701,7 @@ private:
     }
     return notclause;
   }
+  
   /*
   tidies an inner clause in place by deleting duplicate columns and removing
   columns for which both the column and it's negation appear. Called by Tidy()
