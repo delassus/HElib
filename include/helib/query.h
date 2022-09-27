@@ -552,7 +552,6 @@ private:
     std::stack<vecvec> convertStack;
 
     std::istringstream input{s};
-    // std::ostringstream output{}; // TODO: is this needed?
 
     std::string symbol;
 
