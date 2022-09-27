@@ -10,6 +10,17 @@
  * limitations under the License. See accompanying LICENSE file.
  */
 
+/* Copyright (C) 2022 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Extended HElib to support the Not operator in queries.
+ * Contributions include
+ *
+ * Added:
+ *   TEST_P(TestPartialMatch, databaseLookupContainsOnStringsPtxtMatchesCtxt)
+ *   TEST_P(TestPartialMatch, databaseLookupWorksWithQueryAPIWithNot)   
+ */
+
 #include <bitset>
 
 #include <helib/helib.h>

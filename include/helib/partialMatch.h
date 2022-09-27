@@ -9,7 +9,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. See accompanying LICENSE file.
  */
-
+/* Copyright (C) 2022 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Extended HElib to support the Not operator in queries.
+ * Contributions include
+ *
+ * Added:
+ *   Database:
+ *                 template <typename TXT2>
+              auto contains(const std::string& query_string, const Matrix<TXT2>& query_data) const
+ */
 #ifndef HELIB_PARTIALMATCH_H
 #define HELIB_PARTIALMATCH_H
 

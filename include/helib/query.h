@@ -36,6 +36,29 @@
  *   QueryExpr is now a class instead of an alias
  */
 
+/* Copyright (C) 2022 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Extended HElib to support the Not operator in queries.
+ * Contributions include
+ *
+ * Added:
+ *   class Not "and its full contents"
+ *   inline QueryExpr operator!(const QueryExpr& p)
+ *   QueryBuilder:
+ *       void removeOr()
+ *       void tidy(vecvec& expr) const
+ *       vecvec negate(const vecvec& clause) const
+ *       void tidyClause(std::vector<long>& clause) const
+ *
+ * Modified:
+ *     QueryBuilder:
+ *        Moved code out of QueryType build(long columns) const into a utility function 
+ *        QueryType buildWeights(const vecvec& expr, const long columns) const
+ *        modified the code in buildWeights()
+ *        vecvec expandOr(const std::string& s) const  
+ */
+
 #ifndef HELIB_QUERY_H
 #define HELIB_QUERY_H
 
