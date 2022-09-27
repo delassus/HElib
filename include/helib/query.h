@@ -235,7 +235,7 @@ private:
 /**
  * @brief Overloaded operator for creating a `QueryExpr` to a `NOT`
  * expression.
- * @param p operand of the `NOT` expression.
+ * @param p Operand of the `NOT` expression.
  * @return `QueryExpr` with the `NOT` as the `Expr`.
  **/
 inline QueryExpr operator!(const QueryExpr& p)
