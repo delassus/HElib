@@ -398,10 +398,11 @@ public:
     // correspond to not
     vecvec expr = expandOr(query_str);
     // then eliminate duplicates from inner clauses and any empty clauses
-    this->tidy(expr);
+    vecvec tidyExpr = tidy(expr);
     // lastly form weights
-    return this->buildWeights(expr, columns);
+    return this->buildWeights(tidyExpr, columns);
   }
+
   /**
    * @brief Function for replacing a `QueryBuilder` object with a logically
    * equivalent 'QueryBuilder` that uses only `AND`s and `NOT`s.
@@ -539,6 +540,7 @@ private:
     }
     std::cout << "\n";
   }
+
   /**
    * @brief Take a string in Reverse Polish Notation and produce a
    * vector of vectors representing a logically equivalent `AND` of `OR`s.
@@ -610,15 +612,15 @@ private:
    * lastly deletes empty clauses, inplace.
    * @param expr A `vecvec` corresponding to an `AND` of `OR`s.
    */
-  void tidy(vecvec& expr) const
+  vecvec tidy(const vecvec& expr) const
   {
     vecvec x;
-    for (auto& y : expr) {
-      tidyClause(y);
-      if (y.size() != 0)
-        x.push_back(y);
+    for (const auto& y : expr) {
+      auto z = tidyClause(y);
+      if (z.size() != 0)
+        x.emplace_back(z);
     }
-    expr = x;
+    return x;
   }
 
   /**
@@ -672,6 +674,7 @@ private:
                      std::move(taus),
                      containsOR);
   }
+  
   /**
    * @brief Given a `vecvec` interepreted as an `AND` of `OR`s, return a
    * `vecvec` corresponding to the negation. Called by `expandOr()`.
@@ -707,30 +710,33 @@ private:
   }
 
   /**
-   * @brief Tidies an inner clause in place by deleting duplicate columns and
+   * @brief Tidies an inner clause by deleting duplicate columns and
    * removing columns for which both the column and it's negation appear. Called
    * by Tidy()
    *
    * @param clause A vector of column labels and negative column labels, where
    * (i+1) corresponds to column i, and negatives correspond to negations.
    */
-  void tidyClause(std::vector<long>& clause) const
+  std::vector<long> tidyClause(const std::vector<long>& clause) const
   {
     std::unordered_set<long> vars;
     std::vector<long> newclause;
-    for (const auto& i : clause) {
-      if (vars.find(i) == vars.end()) {
-        newclause.push_back(i);
+
+
+    // remove duplicate columns
+    std::copy_if(clause.begin(),clause.end(),std::back_inserter(newclause),[&vars](long i){
+      if (vars.count(i) == 0) {
         vars.insert(i);
-      } else {
-        continue;
+        return true;
       }
-    }
-    clause.clear();
-    for (const auto& i : newclause) {
-      if (vars.find(-1 * i) == vars.end())
-        clause.push_back(i);
-    }
+      return false;      
+      });
+    
+    // remove columns for which the negation appears in the clause
+    std::remove_if(newclause.begin(),newclause.end(),[&vars](long i){
+      return (vars.count(-1 * i) > 0);
+    });
+    return newclause;
   }
 };
 
