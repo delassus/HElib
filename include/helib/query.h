@@ -607,10 +607,11 @@ private:
 
   /**
    * @brief Given a `vecvec` where outer clauses correspond to ANDs and inner
-   * clauses correspond to ORs, deletes duplicated columns from inner clauses,
-   * deletes a column and it's negation when both appear in an inner clause, and
-   * lastly deletes empty clauses, inplace.
+   * clauses correspond to ORs, deletes duplicated columns from inner clauses
+   * (i.e., i OR i), deletes a column and it's negation when both appear in an
+   * inner clause (i.e., i OR NOT i), and lastly deletes empty clauses.
    * @param expr A `vecvec` corresponding to an `AND` of `OR`s.
+   * @return vecvec corresponding to a logically equivalent `AND` of `OR`s.
    */
   vecvec tidy(const vecvec& expr) const
   {
@@ -674,7 +675,7 @@ private:
                      std::move(taus),
                      containsOR);
   }
-  
+
   /**
    * @brief Given a `vecvec` interepreted as an `AND` of `OR`s, return a
    * `vecvec` corresponding to the negation. Called by `expandOr()`.
@@ -713,27 +714,30 @@ private:
    * @brief Tidies an inner clause by deleting duplicate columns and
    * removing columns for which both the column and it's negation appear. Called
    * by Tidy()
-   *
-   * @param clause A vector of column labels and negative column labels, where
-   * (i+1) corresponds to column i, and negatives correspond to negations.
+   * @param clause A vector of column labels and negative column labels,
+   * interpreted as an `OR` clause, where (i+1) corresponds to column i, and
+   * negatives correspond to negations.
+   * @return std::vector<long> a list of unique column labels.
    */
   std::vector<long> tidyClause(const std::vector<long>& clause) const
   {
     std::unordered_set<long> vars;
     std::vector<long> newclause;
 
-
     // remove duplicate columns
-    std::copy_if(clause.begin(),clause.end(),std::back_inserter(newclause),[&vars](long i){
-      if (vars.count(i) == 0) {
-        vars.insert(i);
-        return true;
-      }
-      return false;      
-      });
-    
+    std::copy_if(clause.begin(),
+                 clause.end(),
+                 std::back_inserter(newclause),
+                 [&vars](long i) {
+                   if (vars.count(i) == 0) {
+                     vars.insert(i);
+                     return true;
+                   }
+                   return false;
+                 });
+
     // remove columns for which the negation appears in the clause
-    std::remove_if(newclause.begin(),newclause.end(),[&vars](long i){
+    std::remove_if(newclause.begin(), newclause.end(), [&vars](long i) {
       return (vars.count(-1 * i) > 0);
     });
     return newclause;
