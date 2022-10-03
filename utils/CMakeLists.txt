@@ -39,6 +39,6 @@ file(STRINGS "../VERSION" HELIB_VERSION)
 find_package(helib "${HELIB_VERSION}" EXACT REQUIRED)
 
 add_subdirectory(create-context)
+add_subdirectory(key-gen)
 add_subdirectory(crypto)
-
 add_subdirectory(test_bootstrapping)
