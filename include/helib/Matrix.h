@@ -166,15 +166,13 @@ public:
   Tensor(const T& obj, Dims... dims) :
       subscripts{dims...},
       elements_ptr(std::make_shared<std::vector<T>>(subscripts.size, obj))
-  {
-  }
+  {}
 
   template <typename... Dims>
   Tensor(Dims... dims) :
       subscripts{std::size_t(dims)...},
       elements_ptr(std::make_shared<std::vector<T>>(subscripts.size))
-  {
-  }
+  {}
 
   // TODO generalise this
   Tensor(std::initializer_list<std::vector<T>> lst) :
@@ -198,8 +196,7 @@ public:
   Tensor(const TensorSlice<N>& ts,
          const std::shared_ptr<std::vector<T>>& elems) :
       subscripts(ts), elements_ptr(elems), full_view(false)
-  {
-  }
+  {}
 
   Tensor(const Tensor& other) = default;
   Tensor(Tensor&& other) = default;

@@ -95,8 +95,7 @@ protected:
                   .build()),
       secretKey(context),
       publicKey(secretKey)
-  {
-  }
+  {}
 
   virtual void SetUp() override
   {

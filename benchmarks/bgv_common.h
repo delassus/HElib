@@ -33,8 +33,7 @@ struct Params
          const std::vector<long>& _ords = {},
          const std::vector<long>& _mvec = {}) :
       m(_m), p(_p), r(_r), qbits(_qbits), gens(_gens), ords(_ords), mvec(_mvec)
-  {
-  }
+  {}
   Params(const Params& other) :
       Params(other.m,
              other.p,
@@ -43,8 +42,7 @@ struct Params
              other.gens,
              other.ords,
              other.mvec)
-  {
-  }
+  {}
   bool operator!=(Params& other) const { return !(*this == other); }
   bool operator==(Params& other) const
   {

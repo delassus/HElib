@@ -213,8 +213,7 @@ protected:
                   .buildModChain(false)
                   .build()),
       secKey(prepareContext(context))
-  {
-  }
+  {}
 
   void SetUp() override
   {

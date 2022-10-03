@@ -105,8 +105,7 @@ protected:
                                  GetParam().mvec)),
       publicKey(keySetup(secretKey)),
       ea(context.getEA())
-  {
-  }
+  {}
 
   static helib::Context& postContextSetup(helib::Context& context,
                                           UNUSED int c_m,
@@ -326,8 +325,7 @@ protected:
                                  GetParam().mvec)),
       publicKey(keySetup(secretKey)),
       ea(context.getEA())
-  {
-  }
+  {}
 
   static helib::Context& postContextSetup(helib::Context& context,
                                           UNUSED int c_m,

@@ -1133,7 +1133,7 @@ Context* ContextBuilder<SCHEME>::buildPtr() const
 
 // Essentially serialization of params.
 template <>
-std::ostream& operator<< <BGV>(std::ostream& os, const ContextBuilder<BGV>& cb)
+std::ostream& operator<<<BGV>(std::ostream& os, const ContextBuilder<BGV>& cb)
 {
   const json j = {{"scheme", "bgv"},
                   {"m", cb.m_},
@@ -1156,8 +1156,7 @@ std::ostream& operator<< <BGV>(std::ostream& os, const ContextBuilder<BGV>& cb)
 }
 
 template <>
-std::ostream& operator<< <CKKS>(std::ostream& os,
-                                const ContextBuilder<CKKS>& cb)
+std::ostream& operator<<<CKKS>(std::ostream& os, const ContextBuilder<CKKS>& cb)
 {
   const json j = {{"scheme", "ckks"},
                   {"m", cb.m_},

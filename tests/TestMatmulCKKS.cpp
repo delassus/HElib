@@ -103,8 +103,7 @@ protected:
       secretKey(context),
       publicKey(keySetup(secretKey, GetParam().ks_strategy)),
       ea(context.getEA())
-  {
-  }
+  {}
 
   static helib::SecKey& keySetup(helib::SecKey& secretKey, int ks_strategy)
   {

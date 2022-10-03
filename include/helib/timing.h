@@ -87,8 +87,7 @@ public:
 
   auto_timer(FHEtimer* _timer) :
       timer(_timer), amt(GetTimerClock()), running(true)
-  {
-  }
+  {}
 
   void stop()
   {

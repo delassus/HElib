@@ -231,8 +231,7 @@ public:
                               long _dim,
                               const EncryptedArray& ea) :
       precon(_ctxt), dim(_dim), zMStar(ea.getPAlgebra())
-  {
-  }
+  {}
 
   std::shared_ptr<Ctxt> automorph(long i) const override
   {
@@ -334,8 +333,7 @@ struct ConstMultiplier_DoubleCRT : ConstMultiplier
 
   ConstMultiplier_DoubleCRT(const DoubleCRT& _data, double _sz) :
       data(_data), sz(_sz)
-  {
-  }
+  {}
 
   void mul(Ctxt& ctxt) const override { ctxt.multByConstant(data, sz); }
 
@@ -1995,8 +1993,7 @@ public:
                    const std::vector<long>& _init_idxes,
                    long _dim) :
       ea_basetype(_ea_basetype), mat(_mat), init_idxes(_init_idxes), dim(_dim)
-  {
-  }
+  {}
 
   void processDiagonal(RX& epmat,
                        long offset,
@@ -2296,8 +2293,7 @@ public:
                         const std::vector<long>& _init_idxes,
                         long _dim) :
       ea_basetype(_ea_basetype), mat(_mat), init_idxes(_init_idxes), dim(_dim)
-  {
-  }
+  {}
 
   bool processDiagonal(std::vector<RX>& poly,
                        long offset,

@@ -965,8 +965,7 @@ struct ApproxClass
 
   ApproxClass(const T& val_, double tolerance_, double floor_) :
       val(val_), tolerance(tolerance_), floor(floor_)
-  {
-  }
+  {}
 };
 
 template <class T>

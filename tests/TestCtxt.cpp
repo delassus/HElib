@@ -81,8 +81,7 @@ protected:
                  addSome1DMatrices(secretKey),
                  secretKey)),
       ea(context.getEA())
-  {
-  }
+  {}
 
   virtual void SetUp() override
   {

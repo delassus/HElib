@@ -198,8 +198,7 @@ protected:
           // Now we can set the dry-run flag if desired
           (helib::setDryRun(helib_test::dry), context)),
       publicKey(prepareSecretKey(secretKey, w))
-  {
-  }
+  {}
 
   virtual void TearDown() override
   {

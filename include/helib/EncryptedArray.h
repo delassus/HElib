@@ -1590,13 +1590,11 @@ public:
   EncryptedArray(const Context& context, const NTL::ZZX& G = NTL::ZZX(1, 1)) :
       alMod(context.getAlMod()),
       rep(buildEncryptedArray(context, context.getAlMod(), G))
-  {
-  }
+  {}
   //! constructor: G defaults to F0, PAlgebraMod explicitly given
   EncryptedArray(const Context& context, const PAlgebraMod& _alMod) :
       alMod(_alMod), rep(buildEncryptedArray(context, _alMod))
-  {
-  }
+  {}
 
   // NOTES:
   //  (1) the second constructor is provided mainly for BGV bootstrapping
@@ -2736,8 +2734,7 @@ struct pa_no_impl
 #define HELIB_NO_CKKS_IMPL(impl)                                               \
   template <>                                                                  \
   class impl<PA_cx> : public pa_no_impl<PA_cx>                                 \
-  {                                                                            \
-  };
+  {};
 
 } // namespace helib
 

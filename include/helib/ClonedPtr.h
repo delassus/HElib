@@ -139,8 +139,7 @@ public:
    * @param other The `ClonedPtr` object to be moved.
    **/
   ClonedPtr(ClonedPtr&& other) noexcept : ptr{std::exchange(other.ptr, nullptr)}
-  {
-  }
+  {}
 
   /**
    * @brief Copy assign by cloning the managed object based on the

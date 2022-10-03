@@ -71,8 +71,7 @@ protected:
                   .build()),
       secretKey(setupContext(context)),
       publicKey(secretKey)
-  {
-  }
+  {}
 
   long p;
   long n;

@@ -68,8 +68,7 @@ protected:
                  addFrbMatrices(secretKey),
                  secretKey)),
       ea(context.getEA())
-  {
-  }
+  {}
 
   virtual void SetUp() override
   {

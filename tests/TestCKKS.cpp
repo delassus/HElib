@@ -177,8 +177,7 @@ protected:
                  helib::addSomeFrbMatrices(secretKey),
                  secretKey)),
       ea(context.getEA().getCx())
-  {
-  }
+  {}
 
   virtual void SetUp() override
   {

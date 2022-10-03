@@ -188,8 +188,7 @@ protected:
       secretKey((helib::setDryRun(helib_test::dry),
                  context)), // We can now switch to dry run if desired.
       publicKey(secretKey)
-  {
-  }
+  {}
 
   void SetUp() override
   {

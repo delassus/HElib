@@ -357,8 +357,7 @@ class DummyModulus
 // some stuff to help with template code
 template <typename R>
 struct GenericModulus
-{
-};
+{};
 
 template <>
 struct GenericModulus<NTL::zz_p>
@@ -545,8 +544,7 @@ public:
         std::shared_ptr<TNode<T>> _right,
         const T& _data) :
       left(_left), right(_right), data(_data)
-  {
-  }
+  {}
 };
 
 template <typename T>
@@ -827,8 +825,7 @@ public:
 
   explicit PAlgebraMod(const PAlgebra& zMStar, long r) :
       rep(buildPAlgebraMod(zMStar, r))
-  {
-  }
+  {}
   // constructor
 
   //! Downcast operator

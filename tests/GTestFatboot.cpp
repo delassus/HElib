@@ -236,8 +236,7 @@ protected:
                    .scale(scale ? scale : 10 /*default is 10.*/)
                    .buildModChain(false)
                    .build()))
-  {
-  }
+  {}
 
   void TearDown() override
   {

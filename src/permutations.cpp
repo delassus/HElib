@@ -530,8 +530,7 @@ std::ostream& operator<<(std::ostream& s, const GeneratorTrees& trees)
 
 PermIndepPrecomp::PermIndepPrecomp(const Context& context, long depthBound) :
     PermIndepPrecomp(context.getView(), depthBound)
-{
-}
+{}
 
 PermIndepPrecomp::PermIndepPrecomp(const EncryptedArray& _ea, long depthBound) :
     ea(_ea)
