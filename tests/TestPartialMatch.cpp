@@ -684,6 +684,78 @@ TEST_P(TestPartialMatch, databaseLookupWorksCorrectlyForStrings)
     }
 }
 
+TEST_P(TestPartialMatch, databaseLookupWorksCorrectlyWithNot)
+{
+  helib::Matrix<helib::Ptxt<helib::BGV>> plaintext_database(2l, 5l);
+  // columns/features
+  std::vector<std::vector<long>> plaintext_database_numbers = {
+      {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
+      {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7},
+      {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+      {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+      {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4}};
+  for (int i = 0; i < 5; ++i) {
+    plaintext_database(0, i) =
+        helib::Ptxt<helib::BGV>(context, plaintext_database_numbers[i]);
+    plaintext_database(1, i) =
+        helib::Ptxt<helib::BGV>(context, plaintext_database_numbers[i]);
+  }
+
+  // columns/features
+  helib::Matrix<helib::Ptxt<helib::BGV>> plaintext_query(1l, 5l);
+  std::vector<std::vector<long>> plaintext_query_numbers = {
+      {6, 6, 6, 2, 6, 6, 4, 9, 6, 2, 1, 4},
+      {7, 8, 1, 3, 9, 4, 3, 8, 6, 2, 1, 4},
+      {2, 2, 2, 5, 9, 1, 2, 2, 6, 2, 1, 4},
+      {1, 1, 5, 1, 1, 6, 1, 8, 6, 2, 1, 4},
+      {4, 4, 9, 4, 2, 4, 6, 4, 6, 2, 1, 4}};
+  for (int i = 0; i < 5; ++i)
+    plaintext_query(0, i) =
+        helib::Ptxt<helib::BGV>(context, plaintext_query_numbers[i]);
+
+  auto mask = calculateMasks(ea, plaintext_query, plaintext_database);
+
+  // Fs, taus, and mus to perform the query, q = (!c0 && c2) || !(c3 && c4)
+  std::vector<std::vector<long>> Fs = {{0, 1, 2, 3, 4},
+                                       {0, 1, 2, 3, 4}};
+  std::vector<helib::Matrix<long>> taus = {
+      // The taus are the cartesian product of the above query q
+      {{-1}, {0}, {0}, {-1}, {-1}},       // One of not 0-th, not 3rd, not 4th
+      {{0}, {0}, {1}, {-1}, {-1}}};       // One of not 2nd, not 3rd, not 4th
+  std::vector<long> mus = {3, 2}; // Offset: 3 negations in first clause, 2 in second
+
+  auto scores = calculateScores(Fs, mus, taus, mask);
+
+  // FLT on scores
+  scores.apply([&](auto& ptxt) {
+    ptxt.power(context.getAlMod().getPPowR() - 1);
+    return ptxt;
+  });
+
+  // Initialize all as one so no need to worry about padding matching
+  // if everything matches, this query evaluates to FALSE
+  helib::Ptxt<helib::BGV> expected_result(context, NTL::ZZX(0l));
+  expected_result[0] = 0;  // First row identical      -> q = false
+  expected_result[1] = 0;  // Only c1 differs          -> q = false
+  expected_result[2] = 1;  // (c3 and c4) don't match  -> q = true
+  expected_result[3] = 0;  // Only c3 and c4 match     -> q = false
+  expected_result[4] = 1;  // Only c0 and c3 match     -> q = true
+  expected_result[5] = 1;  // Only c0 and c4 match     -> q = true
+  expected_result[6] = 1;  // Only c2 and c3 match     -> q = true
+  expected_result[7] = 1;  // Only c2 and c4 match     -> q = true
+  expected_result[8] = 1;  // Only c0 matches          -> q = true
+  expected_result[9] = 1;  // Only c2 matches          -> q = true
+  expected_result[10] = 1; // Only c3 matches          -> q = true
+  expected_result[11] = 1; // Only c4 matches          -> q = true
+
+  EXPECT_EQ(scores.dims(0), mask.dims(0));
+  EXPECT_EQ(scores.dims(1), 1l);
+  for (size_t i = 0; i < scores.dims(0); ++i)
+    for (size_t j = 0; j < scores.dims(1); ++j) {
+      EXPECT_EQ(scores(i, j), expected_result);
+    }
+}
+
 TEST_P(TestPartialMatch, databaseLookupWorksCorrectlyForCtxtAndPtxt)
 {
   helib::Matrix<helib::Ptxt<helib::BGV>> plaintext_database(2l, 5l);
