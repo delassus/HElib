@@ -394,22 +394,24 @@ TEST_P(TestBinIO_BGV, throwsWhenPostSecretKeyEyeCatcherNotFound)
 
 TEST_P(TestBinIO_BGV, readKeysFromDeserializeCorrectly)
 {
-  std::stringstream str;
-
-  EXPECT_NO_THROW(publicKey.writeTo(str));
-
-  helib::PubKey deserialized_pk = helib::PubKey::readFrom(str, context);
-
+  std::stringstream strPub;
+  EXPECT_NO_THROW(publicKey.writeTo(strPub));
+  helib::PubKey deserialized_pk = helib::PubKey::readFrom(strPub, context);
   EXPECT_EQ(publicKey, deserialized_pk);
 
-  str.str("");
-  str.clear();
+  std::stringstream strPubSec;
+  EXPECT_NO_THROW(secretKey.writeTo(strPubSec));
+  helib::SecKey deserialized_skpk = helib::SecKey::readFrom(strPubSec, context);
+  EXPECT_EQ(secretKey, deserialized_skpk);
 
-  EXPECT_NO_THROW(secretKey.writeTo(str));
-
-  helib::SecKey deserialized_sk = helib::SecKey::readFrom(str, context);
-
+  std::stringstream strSec;
+  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(strSec));
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(strSec, deserialized_pk);
   EXPECT_EQ(secretKey, deserialized_sk);
+
+  // check that writing SK is smaller than PK+SK
+  EXPECT_TRUE(2 * strSec.tellp() < strPubSec.tellp());
 }
 
 TEST_P(TestBinIO_BGV, readKeyPtrsFromDeserializeCorrectly)
@@ -561,14 +563,25 @@ TEST_P(TestBinIO_BGV, throwsWhenPostCiphertextEyeCatcherNotFoundInPlace)
 
 TEST_P(TestBinIO_BGV, readCiphertextFromDeserializeCorrectly)
 {
-  std::stringstream str;
-  helib::Ctxt ctxt(publicKey);
+  std::stringstream strPub;
+  EXPECT_NO_THROW(publicKey.writeTo(strPub));
+  helib::PubKey deserialized_pk = helib::PubKey::readFrom(strPub, context);
+  EXPECT_EQ(publicKey, deserialized_pk);
 
-  EXPECT_NO_THROW(ctxt.writeTo(str));
+  std::stringstream strPubSec;
+  EXPECT_NO_THROW(secretKey.writeTo(strPubSec));
+  helib::SecKey deserialized_skpk = helib::SecKey::readFrom(strPubSec, context);
+  EXPECT_EQ(secretKey, deserialized_skpk);
 
-  helib::Ctxt deserialized_ctxt = helib::Ctxt::readFrom(str, publicKey);
+  std::stringstream strSec;
+  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(strSec));
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(strSec, deserialized_pk);
+  EXPECT_EQ(secretKey, deserialized_sk);
 
-  EXPECT_EQ(ctxt, deserialized_ctxt);
+  // check that writing SK is smaller than PK+SK
+  // Here we assume that size(SK)<size(PK)
+  EXPECT_TRUE(2 * strSec.tellp() < strPubSec.tellp());
 }
 
 TEST_P(TestBinIO_BGV, readCiphertextInPlaceFromDeserializeCorrectly)
