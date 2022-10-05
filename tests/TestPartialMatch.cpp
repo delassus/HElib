@@ -716,13 +716,14 @@ TEST_P(TestPartialMatch, databaseLookupWorksCorrectlyWithNot)
   auto mask = calculateMasks(ea, plaintext_query, plaintext_database);
 
   // Fs, taus, and mus to perform the query, q = (!c0 && c2) || !(c3 && c4)
-  std::vector<std::vector<long>> Fs = {{0, 1, 2, 3, 4},
-                                       {0, 1, 2, 3, 4}};
+  std::vector<std::vector<long>> Fs = {{0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}};
   std::vector<helib::Matrix<long>> taus = {
       // The taus are the cartesian product of the above query q
-      {{-1}, {0}, {0}, {-1}, {-1}},       // One of not 0-th, not 3rd, not 4th
-      {{0}, {0}, {1}, {-1}, {-1}}};       // One of not 2nd, not 3rd, not 4th
-  std::vector<long> mus = {3, 2}; // Offset: 3 negations in first clause, 2 in second
+      {{-1}, {0}, {0}, {-1}, {-1}}, // One of not 0-th, not 3rd, not 4th
+      {{0}, {0}, {1}, {-1}, {-1}}}; // One of not 2nd, not 3rd, not 4th
+  std::vector<long> mus = {
+      3,
+      2}; // Offset: 3 negations in first clause, 2 in second
 
   auto scores = calculateScores(Fs, mus, taus, mask);
 
