@@ -472,7 +472,8 @@ TEST_P(TestBinIO_BGV, readOnlySecretKeyPtrsFromDeserializeCorrectly)
   EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
 
   std::shared_ptr<helib::SecKey> deserialized_skp =
-      std::make_shared<helib::SecKey>(helib::SecKey::readOnlySecretKeyFrom(str, deserialized_pkp));
+      std::make_shared<helib::SecKey>(
+          helib::SecKey::readOnlySecretKeyFrom(str, *deserialized_pkp));
 
   EXPECT_EQ(secretKey, *deserialized_skp);
 }
@@ -506,11 +507,12 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKey)
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
-  helib::Ctxt ctxt(publicKey);
+  helib::Ctxt ctxt(deserialized_sk);
 
-  ptxt.encrypt(ctxt);
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
 
-  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+  decrypted_result.decrypt(ctxt, secretKey);
+
   EXPECT_EQ(ptxt, decrypted_result);
 }
 
@@ -520,7 +522,27 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecretKeyTo(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(deserialized_sk);
+
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
+
+  decrypted_result.decrypt(ctxt, secretKey);
+
+  EXPECT_EQ(ptxt, decrypted_result);
+}
+
+TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKey)
+{
+  std::stringstream ss;
+
+  secretKey.writeTo(ss);
+
+  helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
@@ -529,7 +551,26 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKeyOnly)
   ptxt.encrypt(ctxt);
 
   EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
-  EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+  EXPECT_EQ(ptxt, decrypted_result);
+}
+
+TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKeyOnly)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+
+  ptxt.encrypt(ctxt);
+
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+  EXPECT_EQ(ptxt, decrypted_result);
 }
 
 TEST_P(TestBinIO_BGV, singleFunctionSerializationOfCiphertext)
@@ -880,14 +921,16 @@ TEST_P(TestBinIO_CKKS, readKeysFromDeserializeCorrectly)
   EXPECT_EQ(secretKey, deserialized_sk);
 }
 
-TEST_P(TestBinIO_CKKS, readOnlySecretKeyFromDeserializeCorrectly){
+TEST_P(TestBinIO_CKKS, readOnlySecretKeyFromDeserializeCorrectly)
+{
   std::stringstream str;
 
   EXPECT_NO_THROW(publicKey.writeTo(str));
   helib::PubKey deserialized_pk = helib::PubKey::readFrom(str, context);
 
   EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(str, deserialized_pk);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(str, deserialized_pk);
   EXPECT_EQ(secretKey, deserialized_sk);
 }
 
@@ -930,7 +973,8 @@ TEST_P(TestBinIO_CKKS, readOnlySecretKeyPtrsFromDeserializeCorrectly)
   EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
 
   std::shared_ptr<helib::SecKey> deserialized_skp =
-      std::make_shared<helib::SecKey>(helib::SecKey::readOnlySecretKeyFrom(str, deserialized_pkp));
+      std::make_shared<helib::SecKey>(
+          helib::SecKey::readOnlySecretKeyFrom(str, *deserialized_pkp));
 
   EXPECT_EQ(secretKey, *deserialized_skp);
 }
@@ -964,11 +1008,12 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKey)
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
-  helib::Ctxt ctxt(publicKey);
+  helib::Ctxt ctxt(deserialized_sk);
 
-  ptxt.encrypt(ctxt);
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
 
-  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+  decrypted_result.decrypt(ctxt, secretKey);
+
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
@@ -978,7 +1023,46 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecretKeyTo(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(deserialized_sk);
+
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
+
+  decrypted_result.decrypt(ctxt, secretKey);
+
+  EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+}
+
+TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKey)
+{
+  std::stringstream ss;
+
+  secretKey.writeTo(ss);
+
+  helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+
+  ptxt.encrypt(ctxt);
+
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+  EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+}
+
+TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKeyOnly)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, publicKey);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
