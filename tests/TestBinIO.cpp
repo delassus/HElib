@@ -763,6 +763,32 @@ TEST_P(TestBinIO_BGV, canPerformOperationsOnDeserializedCiphertext)
   EXPECT_EQ(ptxt1, ptxt2);
 }
 
+TEST_P(TestBinIO_BGV, decryptWithDeserializedSecretKeyOnlyAfterComputation)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+  ptxt.encrypt(ctxt);
+
+  EXPECT_NO_THROW(ptxt *= ptxt);
+  EXPECT_NO_THROW(ptxt += ptxt);
+  EXPECT_NO_THROW(rotate(ptxt, 1));
+
+  EXPECT_NO_THROW(ctxt *= ctxt);
+  EXPECT_NO_THROW(ctxt += ctxt);
+  EXPECT_NO_THROW(ctxt.reLinearize());
+  EXPECT_NO_THROW(ea.rotate(ctxt, 1));
+
+  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+
+  EXPECT_EQ(ptxt, decrypted_result);
+}
+
 TEST_P(TestBinIO_CKKS, singleFunctionSerialization)
 {
   std::stringstream str;
@@ -1294,6 +1320,27 @@ TEST_P(TestBinIO_CKKS, canPerformOperationsOnDeserializedCiphertext)
   EXPECT_NO_THROW(ptxt2.decrypt(inplace_ctxt, secretKey));
 
   EXPECT_EQ(ptxt1, ptxt2);
+}
+
+TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterComputation)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::PtxtArray ptxt(ea), decrypted_result(ea);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+  ptxt.encrypt(ctxt);
+
+  EXPECT_NO_THROW(rotate(ptxt, 1));
+
+  EXPECT_NO_THROW(ea.rotate(ctxt, 1));
+
+  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
+
+  EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
 INSTANTIATE_TEST_SUITE_P(Parameters,
