@@ -321,7 +321,8 @@ public:
    */
   static constexpr std::string_view typeName = "SecKey";
 
-  // Disable default constructor
+  // Disable default
+
   SecKey() = delete;
 
   // Default destructor
@@ -448,7 +449,8 @@ public:
    * @param pubKey Public key matching the secret key.
    * @return The deserialized `SecKey` object.
    **/
-  static SecKey readOnlySecretKeyFrom(std::istream& str, const PubKey& pubKey);
+  static SecKey readOnlySecretKeyFrom(std::istream& str,
+                                      const Context& context);
 
   /**
    * @brief Write out the secret key (`SecKey`) object to the output
@@ -494,6 +496,51 @@ public:
    * @param j The `JsonWrapper` containing the serialized `SecKey` object.
    **/
   void readJSON(const JsonWrapper& j);
+
+  /**
+   * @brief Write out only the secret key (`SecKey`) object to the output
+   * stream using JSON format.
+   * @param str Output `std::ostream`.
+   **/
+  void writeOnlySecKeyToJSON(std::ostream& str) const;
+
+  /**
+   * @brief Write out only the secret key (`SecKey`) object to a `JsonWrapper`.
+   * @return The `JsonWrapper`.
+   **/
+  JsonWrapper writeOnlySecKeyToJSON() const;
+
+  /**
+   * @brief Read from the stream the serialized secret key (`SecKey`) object
+   * using JSON format.
+   * @param str Input `std::istream`.
+   * @param context The `Context` to be used.
+   * @return The deserialized `SecKey` object.
+   **/
+  static SecKey readOnlySecKeyFromJSON(std::istream& str, const Context& context);
+
+  /**
+   * @brief Read from the `JsonWrapper` the serialized secret key (`SecKey`)
+   * object.
+   * @param j The `JsonWrapper` containing the serialized `SecKey` object.
+   * @param context The `Context` to be used.
+   * @return The deserialized `SecKey` object.
+   **/
+  static SecKey readOnlySecKeyFromJSON(const JsonWrapper& j, const Context& context);
+
+  /**
+   * @brief Read from the stream the serialized secret key (`SecKey`) object
+   * using JSON format.
+   * @param str Input `std::istream`.
+   **/
+  void readOnlySecKeyJSON(std::istream& str);
+
+  /**
+   * @brief Read from the `JsonWrapper` the serialized secret key (`SecKey`)
+   * object.
+   * @param j The `JsonWrapper` containing the serialized `SecKey` object.
+   **/
+  void readOnlySecKeyJSON(const JsonWrapper& j);
 
   // TODO: Add a similar method for binary serialization
   // This just writes the derived part, not including the public key

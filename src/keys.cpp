@@ -210,24 +210,20 @@ bool PubKey::operator==(const PubKey& other) const
 {
   if (this == &other)
     return true;
-
   if (&context != &other.context)
     return false;
   if (!pubEncrKey.equalsTo(other.pubEncrKey, /*comparePkeys=*/false))
     return false;
-
   if (skBounds.size() != other.skBounds.size())
     return false;
   for (size_t i = 0; i < skBounds.size(); i++)
     if (fabs(skBounds[i] - other.skBounds[i]) > 0.1)
       return false;
-
   if (keySwitching.size() != other.keySwitching.size())
     return false;
   for (size_t i = 0; i < keySwitching.size(); i++)
     if (keySwitching[i] != other.keySwitching[i])
       return false;
-
   if (keySwitchMap.size() != other.keySwitchMap.size())
     return false;
   for (size_t i = 0; i < keySwitchMap.size(); i++) {
@@ -1064,7 +1060,6 @@ bool SecKey::operator==(const SecKey& other) const
 {
   if (this == &other)
     return true;
-
   if (((const PubKey&)*this) != ((const PubKey&)other))
     return false;
   if (sKeys.size() != other.sKeys.size())
@@ -1556,7 +1551,6 @@ void SecKey::Encrypt(Ctxt& ctxt, const EncodedPtxt& eptxt) const
 void SecKey::Encrypt(Ctxt& ctxt, const EncodedPtxt_BGV& eptxt) const
 {
   HELIB_TIMER_START;
-
   assertTrue(!isCKKS(), "Encrypt: mismatched BGV ptxt / CKKS ctxt");
   assertEq((const PubKey*)this, &ctxt.pubKey, "Encrypt: public key mismatch");
   assertEq(&context, &eptxt.getContext(), "Encrypt: context mismatch");
@@ -1744,9 +1738,11 @@ void SecKey::writeTo(std::ostream& str) const
 
 void SecKey::writeOnlySecretKeyTo(std::ostream& str) const
 {
+  // now start writing secret key
   SerializeHeader<SecKey>().writeTo(str);
-  writeEyeCatcher(str, EyeCatcher::SK_BEGIN);
+  writeEyeCatcher(str, EyeCatcher::SK_BEGIN);  
 
+  // write secret key material to stream
   write_raw_vector<DoubleCRT>(str, this->sKeys);
 
   writeEyeCatcher(str, EyeCatcher::SK_END);
@@ -1777,8 +1773,10 @@ SecKey SecKey::readFrom(std::istream& str, const Context& context)
   return ret;
 }
 
-SecKey SecKey::readOnlySecretKeyFrom(std::istream& str, const PubKey& pubKey)
+SecKey SecKey::readOnlySecretKeyFrom(std::istream& str, const Context& context)
 {
+  // stream should be have a header, eyecatcher, and secretkey.
+  SecKey ret(context);
   const auto header = SerializeHeader<SecKey>::readFrom(str);
   assertEq<IOError>(header.version,
                     Binio::VERSION_0_0_1_0,
@@ -1788,15 +1786,13 @@ SecKey SecKey::readOnlySecretKeyFrom(std::istream& str, const PubKey& pubKey)
   bool eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_BEGIN);
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find pre-secret key eyecatcher");
-
-  SecKey ret(pubKey);
+  
   // Set the secret part of the secret key.
-  ret.sKeys = read_raw_vector<DoubleCRT>(str, ret.context);
+  ret.sKeys = read_raw_vector<DoubleCRT>(str, context);
 
   eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_END);
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find post-secret key eyecatcher");
-
   return ret;
 }
 
@@ -1850,6 +1846,57 @@ void SecKey::readJSON(const JsonWrapper& tjw)
     this->clear();
 
     this->PubKey::readJSON(wrap(j.at("PubKey")));
+
+    this->sKeys = readVectorFromJSON<DoubleCRT>(j.at("sKeys"), context);
+  });
+}
+
+void SecKey::writeOnlySecKeyToJSON(std::ostream& str) const
+{
+  executeRedirectJsonError<void>([&]() { str << writeOnlySecKeyToJSON(); });
+}
+
+JsonWrapper SecKey::writeOnlySecKeyToJSON() const
+{
+  auto body = [this]() {
+    json j = {{"sKeys", writeVectorToJSON(this->sKeys)}};
+    return wrap(toTypedJson<SecKey>(j));
+  };
+  return executeRedirectJsonError<JsonWrapper>(body);
+}
+
+SecKey SecKey::readOnlySecKeyFromJSON(std::istream& str, const Context& context)
+{
+  auto body = [&]() {
+    json j;
+    str >> j;
+    return SecKey::readOnlySecKeyFromJSON(wrap(j), context);
+  };
+
+  return executeRedirectJsonError<SecKey>(body);
+}
+
+SecKey SecKey::readOnlySecKeyFromJSON(const JsonWrapper& jw, const Context& context)
+{
+  SecKey ret{context};
+  ret.readOnlySecKeyJSON(jw);
+  return ret;
+}
+
+void SecKey::readOnlySecKeyJSON(std::istream& str)
+{
+  executeRedirectJsonError<void>([&]() {
+    json j;
+    str >> j;
+    this->readOnlySecKeyJSON(wrap(j));
+  });
+}
+
+void SecKey::readOnlySecKeyJSON(const JsonWrapper& tjw)
+{
+  executeRedirectJsonError<void>([&]() {
+    json j = fromTypedJson<SecKey>(unwrap(tjw));
+    this->clear();
 
     this->sKeys = readVectorFromJSON<DoubleCRT>(j.at("sKeys"), context);
   });
