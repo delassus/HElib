@@ -325,6 +325,7 @@ inline auto Database<TXT>::contains(const std::string& query_string,
     } else if (symbol == "&&") {
       auto rhs = ctxtStack.top();
       ctxtStack.pop();
+      
       auto& lhs = ctxtStack.top();
       lhs.template entrywiseOperation<RTXT>(
           rhs,
@@ -343,8 +344,15 @@ inline auto Database<TXT>::contains(const std::string& query_string,
       assertTrue((std::stol(symbol) >= 0) &&
                      ((std::stol(symbol) < this->columns())),
                  "column is out of range");
-      // push a copy of mask[symbol]
-      ctxtStack.push(mask.columns({std::stol(symbol)}).deepCopy());
+      // push a copy of mask[symbol]. To take a deep copy, first make a matrix
+      // of the right type and dimension with zeroes in every entry.
+      auto ones(mask(0, 0));
+      ones.clear();
+      ones.addConstant(NTL::ZZX(0L));
+      Matrix<RTXT> col(ones, mask.dims(0), 1l);
+      // now add the entries we want to the RHS
+      col += mask.getColumn(std::stol(symbol));
+      ctxtStack.push(col);
     }
   }
   assertEq<LogicError>(1UL,
