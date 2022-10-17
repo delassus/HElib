@@ -17,6 +17,7 @@ add_executable(05_ckks_multlowlvl 05_ckks_multlowlvl.cpp)
 add_executable(06_ckks_complex 06_ckks_complex.cpp)
 add_executable(07_ckks_serialization 07_ckks_serialization.cpp)
 add_executable(08_ckks_deserialization 08_ckks_deserialization.cpp)
+add_executable(09_ckks_keygen_serialization 09_ckks_keygen_serialization.cpp)
 
 target_link_libraries(01_ckks_basics helib)
 target_link_libraries(02_ckks_depth helib)
@@ -26,4 +27,5 @@ target_link_libraries(05_ckks_multlowlvl helib)
 target_link_libraries(06_ckks_complex helib)
 target_link_libraries(07_ckks_serialization helib)
 target_link_libraries(08_ckks_deserialization helib)
+target_link_libraries(09_ckks_keygen_serialization helib)
 
