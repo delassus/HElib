@@ -46,37 +46,57 @@ int main(int argc, char* argv[])
     } else {
       throw std::runtime_error("Could not open file 'secretKey.json'.");
     }
+    // we are going to make two separate public keys: one with evaluation keys, to transmit to the server, and one without, for client side encryption. We will call these `evalPublicKey` and `encPublicKey`. We generate the second of these now
+    helib::PubKey& encPublicKey = secretKey;
+    // and write to a file
+    std::ofstream outEncPublicKeyFile;
+    outEncPublicKeyFile.open("encPublicKey.json", std::ios::out);
 
-    // we now generate the evaluation keys
+    if (outEncPublicKeyFile.is_open()) {
+      // Again, we write the context to a file
+      context.writeToJSON(outEncPublicKeyFile);
+      // print the size of the file after printing context
+      std::cout << "size of encryption public key file after printing context: "
+                << outEncPublicKeyFile.tellp() << std::endl;
+      // now write the encryption public key
+      encPublicKey.writeToJSON(outEncPublicKeyFile);
+      std::cout << "size of encryption public key file after printing public key: "
+                << outEncPublicKeyFile.tellp() << std::endl;
+      // Close the ofstream
+      outEncPublicKeyFile.close();
+    } else {
+      throw std::runtime_error("Could not open file 'EncPublicKey.json'.");
+    }
+
+
+    // now we generate the evaluation keys
     helib::addSome1DMatrices(secretKey);
 
-    // as discussed in tutorial 03, the evaluation keys are currently associated
-    // with the secret key. To transmit them, we will store them in a public key
-    // object as follows.
-    helib::PubKey& publicKey = secretKey;
-    // we will store this in the second file, publicKey.json, which will be
+    // and create a second public key
+    helib::PubKey& evalPublicKey = secretKey;
+    // we will store this in a third file, evalPublicKey.json, which will be
     // transmitted to the server.
-    std::ofstream outPublicKeyFile;
-    outPublicKeyFile.open("publicKey.json", std::ios::out);
+    std::ofstream outEvalPublicKeyFile;
+    outEvalPublicKeyFile.open("evalPublicKey.json", std::ios::out);
 
-    if (outPublicKeyFile.is_open()) {
+    if (outEvalPublicKeyFile.is_open()) {
       // Again, we write the context to a file
-      context.writeToJSON(outPublicKeyFile);
+      context.writeToJSON(outEvalPublicKeyFile);
       // print the size of the file after printing context
-      std::cout << "size of public key file after printing context: "
-                << outPublicKeyFile.tellp() << std::endl;
-      // now write the public key
-      publicKey.writeToJSON(outPublicKeyFile);
-      std::cout << "size of public key file after printing public key: "
-                << outPublicKeyFile.tellp() << std::endl;
+      std::cout << "size of evaluation public key file after printing context: "
+                << outEvalPublicKeyFile.tellp() << std::endl;
+      // now write the evaluation public key
+      evalPublicKey.writeToJSON(outEvalPublicKeyFile);
+      std::cout << "size of evaluation public key file after printing public key: "
+                << outEvalPublicKeyFile.tellp() << std::endl;
       // Close the ofstream
-      outPublicKeyFile.close();
+      outEvalPublicKeyFile.close();
     } else {
-      throw std::runtime_error("Could not open file 'publicKey.json'.");
+      throw std::runtime_error("Could not open file 'evalPublicKey.json'.");
     }
   }
 
-  // Suppose the client now wants to pull the public key from storage, encrypt
+  // Suppose the client now wants to pull the encryption public key from storage, encrypt
   // some data, and write this ciphertext to a file for transmission.
 
   // we are going to record what the result of computation should be in order to
@@ -84,9 +104,9 @@ int main(int argc, char* argv[])
   std::vector<double> results_vector;
   {
     std::ifstream inPublicKeyFile;
-    inPublicKeyFile.open("publicKey.json", std::ios::in);
+    inPublicKeyFile.open("encPublicKey.json", std::ios::in);
     if (!inPublicKeyFile.is_open()) {
-      throw std::runtime_error("Could not open file 'publicKey.json'.");
+      throw std::runtime_error("Could not open file 'encPublicKey.json'.");
     }
 
     // First, we read the context from the file
@@ -132,13 +152,13 @@ int main(int argc, char* argv[])
   // homomorphically.
   {
     // we first need to read in the public key, which we do the same way as
-    // above.
+    // above, but this time using the evalPublicKey.json file.
     std::ifstream inPublicKeyFile;
 
-    inPublicKeyFile.open("publicKey.json", std::ios::in);
+    inPublicKeyFile.open("evalPublicKey.json", std::ios::in);
 
     if (!inPublicKeyFile.is_open()) {
-      throw std::runtime_error("Could not open file 'publicKey.json'.");
+      throw std::runtime_error("Could not open file 'evalPublicKey.json'.");
     }
 
     helib::Context deserialized_context =
