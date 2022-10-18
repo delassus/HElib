@@ -441,25 +441,6 @@ TEST_P(TestBinIO_BGV, readKeysFromDeserializeCorrectly)
   EXPECT_EQ(secretKey, deserialized_sk);
 }
 
-TEST_P(TestBinIO_BGV, readOnlySecretKeyFromDeserializeCorrectly)
-{
-  std::stringstream str;
-
-  EXPECT_NO_THROW(publicKey.writeTo(str));
-
-  helib::PubKey deserialized_pk = helib::PubKey::readFrom(str, context);
-
-  EXPECT_EQ(publicKey, deserialized_pk);
-  str.str("");
-  str.clear();
-  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
-
-  helib::SecKey deserialized_sk =
-      helib::SecKey::readOnlySecretKeyFrom(str, context);
-  // TODO: this fails because deserialized_sk has no PubEncrKey
-  // EXPECT_EQ(secretKey, deserialized_sk);
-}
-
 TEST_P(TestBinIO_BGV, readKeyPtrsFromDeserializeCorrectly)
 {
   std::stringstream str;
@@ -1015,24 +996,7 @@ TEST_P(TestBinIO_CKKS, readKeysFromDeserializeCorrectly)
 
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(str, context);
 
-  // TODO: this fails because deserialized_sk has no PubEncrKey
-  // EXPECT_EQ(secretKey, deserialized_sk);
-}
-
-TEST_P(TestBinIO_CKKS, readOnlySecretKeyFromDeserializeCorrectly)
-{
-  std::stringstream str;
-
-  EXPECT_NO_THROW(publicKey.writeTo(str));
-  helib::PubKey deserialized_pk = helib::PubKey::readFrom(str, context);
-
-  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
-
-  helib::SecKey deserialized_sk =
-      helib::SecKey::readOnlySecretKeyFrom(str, context);
-
-  // TODO: this fails because deserialized_sk has no PubEncrKey
-  // EXPECT_EQ(secretKey, deserialized_sk);
+  EXPECT_EQ(secretKey, deserialized_sk);
 }
 
 TEST_P(TestBinIO_CKKS, readKeyPtrsFromDeserializeCorrectly)
@@ -1055,30 +1019,6 @@ TEST_P(TestBinIO_CKKS, readKeyPtrsFromDeserializeCorrectly)
       std::make_shared<helib::SecKey>(helib::SecKey::readFrom(str, context));
 
   EXPECT_EQ(secretKey, *deserialized_skp);
-}
-
-TEST_P(TestBinIO_CKKS, readOnlySecretKeyPtrsFromDeserializeCorrectly)
-{
-  std::stringstream str;
-
-  EXPECT_NO_THROW(publicKey.writeTo(str));
-
-  std::shared_ptr<helib::PubKey> deserialized_pkp =
-      std::make_shared<helib::PubKey>(helib::PubKey::readFrom(str, context));
-
-  EXPECT_EQ(publicKey, *deserialized_pkp);
-
-  str.str("");
-  str.clear();
-
-  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
-
-  std::shared_ptr<helib::SecKey> deserialized_sk =
-      std::make_shared<helib::SecKey>(
-          helib::SecKey::readOnlySecretKeyFrom(str, context));
-  
-  // TODO: this fails because deserialized_sk has no PubEncrKey
-  // EXPECT_EQ(secretKey, *deserialized_sk);
 }
 
 TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicKey)
