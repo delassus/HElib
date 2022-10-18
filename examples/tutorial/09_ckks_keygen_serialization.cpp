@@ -47,11 +47,8 @@ int main(int argc, char* argv[])
     } else {
       throw std::runtime_error("Could not open file 'secretKey.json'.");
     }
-    // we are going to make two separate public keys: one with evaluation keys,
-    // to transmit to the server, and one without, for client side encryption.
-    // We will call these `evalPublicKey` and `encPublicKey`. We generate the
-    // second of these now
-    helib::PubKey& encPublicKey = secretKey;
+    // we are going to write the public key twice, once before we add the keyswitching matrices, and once after. Writing before gives a smaller public key which can be used for encryption (called the encPublicKey) and after gives a large public key which can be used for homomorphic function evaluation (called the evalPublicKey).
+    helib::PubKey& PublicKey = secretKey;
     // and write to a file
     std::ofstream outEncPublicKeyFile;
     outEncPublicKeyFile.open("encPublicKey.json", std::ios::out);
@@ -62,24 +59,21 @@ int main(int argc, char* argv[])
       // print the size of the file after printing context
       std::cout << "size of encryption public key file after printing context: "
                 << outEncPublicKeyFile.tellp() << std::endl;
-      // now write the encryption public key
-      encPublicKey.writeToJSON(outEncPublicKeyFile);
+      // now write the public key
+      PublicKey.writeToJSON(outEncPublicKeyFile);
       std::cout
           << "size of encryption public key file after printing public key: "
           << outEncPublicKeyFile.tellp() << std::endl;
       // Close the ofstream
       outEncPublicKeyFile.close();
     } else {
-      throw std::runtime_error("Could not open file 'EncPublicKey.json'.");
+      throw std::runtime_error("Could not open file 'encPublicKey.json'.");
     }
 
     // now we generate the evaluation keys
     helib::addSome1DMatrices(secretKey);
 
-    // and create a second public key
-    helib::PubKey& evalPublicKey = secretKey;
-    // we will store this in a third file, evalPublicKey.json, which will be
-    // transmitted to the server.
+    // now the keyswitching matrices are associated with the public key, we can write the larger evaluation public key. 
     std::ofstream outEvalPublicKeyFile;
     outEvalPublicKeyFile.open("evalPublicKey.json", std::ios::out);
 
@@ -90,7 +84,7 @@ int main(int argc, char* argv[])
       std::cout << "size of evaluation public key file after printing context: "
                 << outEvalPublicKeyFile.tellp() << std::endl;
       // now write the evaluation public key
-      evalPublicKey.writeToJSON(outEvalPublicKeyFile);
+      PublicKey.writeToJSON(outEvalPublicKeyFile);
       std::cout
           << "size of evaluation public key file after printing public key: "
           << outEvalPublicKeyFile.tellp() << std::endl;
@@ -118,7 +112,7 @@ int main(int argc, char* argv[])
     // First, we read the context from the file
     helib::Context deserialized_context =
         helib::Context::readFromJSON(inPublicKeyFile);
-    // then the public key
+    // then the encryption public key
     helib::PubKey deserialized_pk =
         helib::PubKey::readFromJSON(inPublicKeyFile, deserialized_context);
     // close the ifstream
