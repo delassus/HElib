@@ -1740,7 +1740,7 @@ void SecKey::writeOnlySecretKeyTo(std::ostream& str) const
 {
   // now start writing secret key
   SerializeHeader<SecKey>().writeTo(str);
-  writeEyeCatcher(str, EyeCatcher::SK_BEGIN);  
+  writeEyeCatcher(str, EyeCatcher::SK_BEGIN);
 
   // write secret key material to stream
   write_raw_vector<DoubleCRT>(str, this->sKeys);
@@ -1786,7 +1786,7 @@ SecKey SecKey::readOnlySecretKeyFrom(std::istream& str, const Context& context)
   bool eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_BEGIN);
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find pre-secret key eyecatcher");
-  
+
   // Set the secret part of the secret key.
   ret.sKeys = read_raw_vector<DoubleCRT>(str, context);
 
@@ -1876,7 +1876,8 @@ SecKey SecKey::readOnlySecKeyFromJSON(std::istream& str, const Context& context)
   return executeRedirectJsonError<SecKey>(body);
 }
 
-SecKey SecKey::readOnlySecKeyFromJSON(const JsonWrapper& jw, const Context& context)
+SecKey SecKey::readOnlySecKeyFromJSON(const JsonWrapper& jw,
+                                      const Context& context)
 {
   SecKey ret{context};
   ret.readOnlySecKeyJSON(jw);

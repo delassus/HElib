@@ -3,7 +3,8 @@
 #include <helib/helib.h>
 
 // In this tutorial we consider generating keys, transmitting key
-// material, evaluating, and finally returning for decryption.
+// material, evaluating a function homomorphically, and finally returning for
+// decryption.
 
 int main(int argc, char* argv[])
 {
@@ -46,7 +47,10 @@ int main(int argc, char* argv[])
     } else {
       throw std::runtime_error("Could not open file 'secretKey.json'.");
     }
-    // we are going to make two separate public keys: one with evaluation keys, to transmit to the server, and one without, for client side encryption. We will call these `evalPublicKey` and `encPublicKey`. We generate the second of these now
+    // we are going to make two separate public keys: one with evaluation keys,
+    // to transmit to the server, and one without, for client side encryption.
+    // We will call these `evalPublicKey` and `encPublicKey`. We generate the
+    // second of these now
     helib::PubKey& encPublicKey = secretKey;
     // and write to a file
     std::ofstream outEncPublicKeyFile;
@@ -60,14 +64,14 @@ int main(int argc, char* argv[])
                 << outEncPublicKeyFile.tellp() << std::endl;
       // now write the encryption public key
       encPublicKey.writeToJSON(outEncPublicKeyFile);
-      std::cout << "size of encryption public key file after printing public key: "
-                << outEncPublicKeyFile.tellp() << std::endl;
+      std::cout
+          << "size of encryption public key file after printing public key: "
+          << outEncPublicKeyFile.tellp() << std::endl;
       // Close the ofstream
       outEncPublicKeyFile.close();
     } else {
       throw std::runtime_error("Could not open file 'EncPublicKey.json'.");
     }
-
 
     // now we generate the evaluation keys
     helib::addSome1DMatrices(secretKey);
@@ -87,8 +91,9 @@ int main(int argc, char* argv[])
                 << outEvalPublicKeyFile.tellp() << std::endl;
       // now write the evaluation public key
       evalPublicKey.writeToJSON(outEvalPublicKeyFile);
-      std::cout << "size of evaluation public key file after printing public key: "
-                << outEvalPublicKeyFile.tellp() << std::endl;
+      std::cout
+          << "size of evaluation public key file after printing public key: "
+          << outEvalPublicKeyFile.tellp() << std::endl;
       // Close the ofstream
       outEvalPublicKeyFile.close();
     } else {
@@ -96,8 +101,9 @@ int main(int argc, char* argv[])
     }
   }
 
-  // Suppose the client now wants to pull the encryption public key from storage, encrypt
-  // some data, and write this ciphertext to a file for transmission.
+  // Suppose the client now wants to pull the encryption public key from
+  // storage, encrypt some data, and write this ciphertext to a file for
+  // transmission.
 
   // we are going to record what the result of computation should be in order to
   // compare.
@@ -185,7 +191,7 @@ int main(int argc, char* argv[])
     ctxt_result += deserialized_ctxt;
     ctxt_result += 4.0;
     ctxt_result.cleanUp();
-    
+
     // and finally write the result to a file
     std::ofstream outCtxtResultFile;
     outCtxtResultFile.open("ctxtResult.json", std::ios::out);

@@ -517,7 +517,8 @@ public:
    * @param context The `Context` to be used.
    * @return The deserialized `SecKey` object.
    **/
-  static SecKey readOnlySecKeyFromJSON(std::istream& str, const Context& context);
+  static SecKey readOnlySecKeyFromJSON(std::istream& str,
+                                       const Context& context);
 
   /**
    * @brief Read from the `JsonWrapper` the serialized secret key (`SecKey`)
@@ -526,7 +527,8 @@ public:
    * @param context The `Context` to be used.
    * @return The deserialized `SecKey` object.
    **/
-  static SecKey readOnlySecKeyFromJSON(const JsonWrapper& j, const Context& context);
+  static SecKey readOnlySecKeyFromJSON(const JsonWrapper& j,
+                                       const Context& context);
 
   /**
    * @brief Read from the stream the serialized secret key (`SecKey`) object

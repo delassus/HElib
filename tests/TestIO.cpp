@@ -762,7 +762,8 @@ TEST_P(TestIO_BGV, canEncryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecKeyToJSON(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecKeyFromJSON(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecKeyFromJSON(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
@@ -799,7 +800,8 @@ TEST_P(TestIO_BGV, canDecryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecKeyToJSON(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecKeyFromJSON(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecKeyFromJSON(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
@@ -1577,7 +1579,8 @@ TEST_P(TestIO_CKKS, canEncryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecKeyToJSON(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecKeyFromJSON(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecKeyFromJSON(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
@@ -1615,7 +1618,8 @@ TEST_P(TestIO_CKKS, canDecryptWithDeserializedSecretKeyOnly)
 
   secretKey.writeOnlySecKeyToJSON(ss);
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecKeyFromJSON(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecKeyFromJSON(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
