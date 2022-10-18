@@ -482,6 +482,34 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedPublicKey)
   EXPECT_EQ(ptxt, decrypted_result);
 }
 
+TEST_P(TestBinIO_BGV, canEncryptWithDeserializedPublicEncryptionKeyAndContext)
+{
+  std::stringstream ss;
+
+  helib::PubKey& encPublicKey = secretKey;
+
+  context.writeTo(ss);
+  encPublicKey.writeTo(ss);
+
+  helib::Context deserialized_context = helib::Context::readFrom(ss);
+  helib::PubKey deserialized_enc_pk =
+      helib::PubKey::readFrom(ss, deserialized_context);
+
+  helib::PtxtArray ptxt(deserialized_context),
+      decrypted_result(deserialized_context);
+  ptxt.random();
+  helib::Ctxt ctxt(deserialized_enc_pk);
+
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
+
+  secretKey.writeOnlySecretKeyTo(ss);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, deserialized_context);
+  decrypted_result.decrypt(ctxt, deserialized_sk);
+
+  EXPECT_EQ(ptxt, decrypted_result);
+}
+
 TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKey)
 {
   std::stringstream ss;
@@ -508,7 +536,7 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKeyOnly)
 
   helib::SecKey deserialized_sk =
       helib::SecKey::readOnlySecretKeyFrom(ss, context);
-  
+
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
   helib::Ctxt ctxt(deserialized_sk);
@@ -562,14 +590,15 @@ TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKeyOnlyAndContext)
   helib::Context deserialized_context = helib::Context::readFrom(ss);
   helib::SecKey deserialized_sk =
       helib::SecKey::readOnlySecretKeyFrom(ss, deserialized_context);
-  helib::PtxtArray ptxt(deserialized_context), decrypted_result(deserialized_context);
+  helib::PtxtArray ptxt(deserialized_context),
+      decrypted_result(deserialized_context);
   ptxt.random();
   helib::Ctxt ctxt(deserialized_sk);
 
   ptxt.encrypt(ctxt);
 
   EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
-  EXPECT_EQ(ptxt,decrypted_result);
+  EXPECT_EQ(ptxt, decrypted_result);
 }
 
 TEST_P(TestBinIO_BGV, singleFunctionSerializationOfCiphertext)
@@ -731,6 +760,50 @@ TEST_P(TestBinIO_BGV, canPerformOperationsOnDeserializedCiphertext)
   EXPECT_EQ(ptxt1, ptxt2);
 }
 
+TEST_P(
+    TestBinIO_BGV,
+    canPerformOperationsOnDeserializedCiphertextWithDeserializedContextAndEvalKey)
+{
+  std::stringstream ss1, ss2;
+  helib::PtxtArray ptxt(context);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+  ptxt.encrypt(ctxt);
+
+  ctxt.writeTo(ss1);
+  context.writeTo(ss2);
+  publicKey.writeTo(ss2);
+
+  helib::Context deserialized_context = helib::Context::readFrom(ss2);
+  helib::PubKey deserialized_eval_pk =
+      helib::PubKey::readFrom(ss2, deserialized_context);
+
+  helib::Ctxt deserialized_ctxt =
+      helib::Ctxt::readFrom(ss1, deserialized_eval_pk);
+  helib::Ctxt deserialized_ctxt_copy(deserialized_ctxt);
+  EXPECT_NO_THROW(deserialized_ctxt *= deserialized_ctxt_copy);
+  EXPECT_NO_THROW(deserialized_ctxt += deserialized_ctxt_copy);
+  EXPECT_NO_THROW(deserialized_ctxt.reLinearize());
+  EXPECT_NO_THROW(deserialized_context.getEA().rotate(deserialized_ctxt, 1));
+
+  helib::PtxtArray ptxt_copy(ptxt);
+  ptxt *= ptxt_copy;
+  ptxt += ptxt_copy;
+  rotate(ptxt, 1);
+  helib::PtxtArray decrypted_result(deserialized_context);
+  std::stringstream ss3;
+  secretKey.writeOnlySecretKeyTo(ss3);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss3, deserialized_context);
+  // to have consistent contexts, read ptxt to stream and then read with this
+  // context
+  ptxt.writeToJSON(ss3);
+  helib::PtxtArray ptxt_result =
+      helib::PtxtArray::readFromJSON(ss3, deserialized_context);
+  decrypted_result.decrypt(deserialized_ctxt, deserialized_sk);
+  EXPECT_EQ(decrypted_result, ptxt_result);
+}
+
 TEST_P(TestBinIO_BGV, decryptWithDeserializedSecretKeyOnlyAfterComputation)
 {
   std::stringstream ss;
@@ -751,10 +824,39 @@ TEST_P(TestBinIO_BGV, decryptWithDeserializedSecretKeyOnlyAfterComputation)
   EXPECT_NO_THROW(ctxt.reLinearize());
   EXPECT_NO_THROW(ea.rotate(ctxt, 1));
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, context);
   EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
 
   EXPECT_EQ(ptxt, decrypted_result);
+}
+
+TEST_P(TestBinIO_BGV,
+       decryptDeserializedCiphertextWithDeserializedSecretKeyOnly)
+{
+  std::stringstream ss1, ss2;
+  helib::Ctxt ctxt(publicKey);
+  helib::PtxtArray ptxt(context);
+  ptxt.decrypt(ctxt, secretKey);
+
+  ctxt.writeTo(ss1);
+  context.writeTo(ss2);
+  secretKey.writeOnlySecretKeyTo(ss2);
+
+  helib::Context deserialized_context = helib::Context::readFrom(ss2);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss2, deserialized_context);
+  helib::Ctxt deserialized_ctxt = helib::Ctxt::readFrom(ss1, deserialized_sk);
+  helib::PtxtArray decrypted_result(deserialized_context);
+  decrypted_result.decrypt(deserialized_ctxt, deserialized_sk);
+
+  // for consistent contexts, write ptxt to stream and read with context
+  std::stringstream ss3;
+  ptxt.writeToJSON(ss3);
+  helib::PtxtArray ptxt_result =
+      helib::PtxtArray::readFromJSON(ss3, deserialized_context);
+
+  EXPECT_EQ(ptxt_result, decrypted_result);
 }
 
 TEST_P(TestBinIO_CKKS, singleFunctionSerialization)
@@ -1016,6 +1118,30 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicKey)
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
+TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicEncryptionKeyAndContext)
+{
+  std::stringstream ss;
+
+  helib::PubKey& encPublicKey = secretKey;
+  context.writeTo(ss);
+  encPublicKey.writeTo(ss);
+  helib::Context deserialized_context = helib::Context::readFrom(ss);
+  helib::PubKey deserialized_enc_pk =
+      helib::PubKey::readFrom(ss, deserialized_context);
+  helib::PtxtArray ptxt(deserialized_context),
+      decrypted_result(deserialized_context);
+  ptxt.random();
+  helib::Ctxt ctxt(deserialized_enc_pk);
+  EXPECT_NO_THROW(ptxt.encrypt(ctxt));
+
+  // now make a secret key with the exact same context
+  secretKey.writeOnlySecretKeyTo(ss);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, deserialized_context);
+  decrypted_result.decrypt(ctxt, deserialized_sk);
+  EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+}
+
 TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKey)
 {
   std::stringstream ss;
@@ -1040,7 +1166,7 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKeyOnly)
   std::stringstream ss;
 
   secretKey.writeOnlySecretKeyTo(ss);
-  
+
   helib::SecKey deserialized_sk =
       helib::SecKey::readOnlySecretKeyFrom(ss, context);
 
@@ -1099,7 +1225,8 @@ TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKeyOnlyAndContext)
   helib::Context deserialized_context = helib::Context::readFrom(ss);
   helib::SecKey deserialized_sk =
       helib::SecKey::readOnlySecretKeyFrom(ss, deserialized_context);
-  helib::PtxtArray ptxt(deserialized_context), decrypted_result(deserialized_context);
+  helib::PtxtArray ptxt(deserialized_context),
+      decrypted_result(deserialized_context);
   ptxt.random();
   helib::Ctxt ctxt(deserialized_sk);
 
@@ -1242,7 +1369,6 @@ TEST_P(TestBinIO_CKKS, canPerformOperationsOnDeserializedCiphertext)
 {
   std::stringstream ss1, ss2;
   helib::Ctxt ctxt(publicKey);
-
   ctxt.writeTo(ss1);
   ctxt.writeTo(ss2);
 
@@ -1267,6 +1393,47 @@ TEST_P(TestBinIO_CKKS, canPerformOperationsOnDeserializedCiphertext)
   EXPECT_EQ(ptxt1, ptxt2);
 }
 
+TEST_P(
+    TestBinIO_CKKS,
+    canPerformOperationsOnDeserializedCiphertextWithDeserializedContextAndEvalKey)
+{
+  std::stringstream ss1, ss2;
+  helib::PtxtArray ptxt(context);
+  ptxt.random();
+  helib::Ctxt ctxt(publicKey);
+  ptxt.encrypt(ctxt);
+
+  ctxt.writeTo(ss1);
+  context.writeTo(ss2);
+  publicKey.writeTo(ss2);
+
+  helib::Context deserialized_context = helib::Context::readFrom(ss2);
+  helib::PubKey deserialized_eval_pk =
+      helib::PubKey::readFrom(ss2, deserialized_context);
+
+  helib::Ctxt deserialized_ctxt =
+      helib::Ctxt::readFrom(ss1, deserialized_eval_pk);
+  helib::Ctxt deserialized_ctxt_copy(deserialized_ctxt);
+  EXPECT_NO_THROW(deserialized_ctxt += deserialized_ctxt_copy);
+  EXPECT_NO_THROW(deserialized_context.getEA().rotate(deserialized_ctxt, 1));
+
+  helib::PtxtArray ptxt_copy(ptxt);
+  ptxt += ptxt_copy;
+  rotate(ptxt, 1);
+  helib::PtxtArray decrypted_result(deserialized_context);
+  std::stringstream ss3;
+  secretKey.writeOnlySecretKeyTo(ss3);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss3, deserialized_context);
+  // to have consistent contexts, write ptxt to stream and then read with this
+  // context
+  ptxt.writeToJSON(ss3);
+  helib::PtxtArray ptxt_result =
+      helib::PtxtArray::readFromJSON(ss3, deserialized_context);
+  decrypted_result.decrypt(deserialized_ctxt, deserialized_sk);
+  EXPECT_EQ(decrypted_result, helib::Approx(ptxt_result));
+}
+
 TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterComputation)
 {
   std::stringstream ss;
@@ -1282,10 +1449,39 @@ TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterComputation)
 
   EXPECT_NO_THROW(ea.rotate(ctxt, 1));
 
-  helib::SecKey deserialized_sk = helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, context);
   EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
 
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+}
+
+TEST_P(TestBinIO_CKKS,
+       decryptDeserializedCiphertextWithDeserializedSecretKeyOnly)
+{
+  std::stringstream ss1, ss2;
+  helib::Ctxt ctxt(publicKey);
+  helib::PtxtArray ptxt(context);
+  ptxt.decrypt(ctxt, secretKey);
+
+  ctxt.writeTo(ss1);
+  context.writeTo(ss2);
+  secretKey.writeOnlySecretKeyTo(ss2);
+
+  helib::Context deserialized_context = helib::Context::readFrom(ss2);
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss2, deserialized_context);
+  helib::Ctxt deserialized_ctxt = helib::Ctxt::readFrom(ss1, deserialized_sk);
+  helib::PtxtArray decrypted_result(deserialized_context);
+  decrypted_result.decrypt(deserialized_ctxt, deserialized_sk);
+
+  // for consistent contexts, write ptxt to stream and read with context
+  std::stringstream ss3;
+  ptxt.writeToJSON(ss3);
+  helib::PtxtArray ptxt_result =
+      helib::PtxtArray::readFromJSON(ss3, deserialized_context);
+
+  EXPECT_EQ(ptxt_result, decrypted_result);
 }
 
 INSTANTIATE_TEST_SUITE_P(Parameters,
