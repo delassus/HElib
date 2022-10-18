@@ -463,30 +463,6 @@ TEST_P(TestBinIO_BGV, readKeyPtrsFromDeserializeCorrectly)
   EXPECT_EQ(secretKey, *deserialized_skp);
 }
 
-TEST_P(TestBinIO_BGV, readOnlySecretKeyPtrsFromDeserializeCorrectly)
-{
-  std::stringstream str;
-
-  EXPECT_NO_THROW(publicKey.writeTo(str));
-
-  std::shared_ptr<helib::PubKey> deserialized_pkp =
-      std::make_shared<helib::PubKey>(helib::PubKey::readFrom(str, context));
-
-  EXPECT_EQ(publicKey, *deserialized_pkp);
-  
-  str.str("");
-  str.clear();
-
-  EXPECT_NO_THROW(secretKey.writeOnlySecretKeyTo(str));
-
-  std::shared_ptr<helib::SecKey> deserialized_skp =
-      std::make_shared<helib::SecKey>(
-          helib::SecKey::readOnlySecretKeyFrom(str, context));
-
-  // TODO: this fails because deserialized_sk has no PubEncrKey
-  // EXPECT_EQ(secretKey, *deserialized_skp);
-}
-
 TEST_P(TestBinIO_BGV, canEncryptWithDeserializedPublicKey)
 {
   std::stringstream ss;
