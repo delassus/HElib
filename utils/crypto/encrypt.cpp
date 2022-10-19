@@ -57,10 +57,10 @@ void encryptFromTo(const CmdLineOpts& cmdLineOpts,
                              estimateCtxtSize(context, cmdLineOpts.offset));
 
   // Setting the stage
-  std::vector<helib::Ptxt<SCHEME>> ptxts;
+  std::vector<helib::PtxtArray> ptxts;
   std::vector<helib::Ctxt> ctxts;
   helib::Ctxt zero_ctxt(pk);
-  helib::Ptxt<SCHEME> zero_ptxt(context);
+  helib::PtxtArray zero_ptxt(context);
 
   // Read in a batch
   for (long remaining = dims.first * dims.second, writtenBatches = 0;
@@ -84,7 +84,7 @@ void encryptFromTo(const CmdLineOpts& cmdLineOpts,
     for (long i = first; i < last; ++i) {
       std::istringstream istr(ptxt_strings[i]);
       istr >> ptxts[i];
-      pk.Encrypt(ctxts[i], ptxts[i]);
+      ptxts[i].encrypt(ctxts[i]);
     }
 
     // Write to file
