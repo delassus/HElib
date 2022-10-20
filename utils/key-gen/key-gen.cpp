@@ -10,8 +10,8 @@
  * limitations under the License. See accompanying LICENSE file.
  */
 
-// BGV without bootstrapping key generation file. Writes secret key and
-// evaluation key to different files.
+// BGV without bootstrapping key generation file. Writes secret key, encryption
+// public key, and evaluation key to different files.
 
 #include <fstream>
 #include <ctime>
@@ -39,38 +39,6 @@ struct ParamsFileOpts
   long c = 0;
   long Qbits = 0;
 };
-
-// Write context.printout to file.out
-void printoutToStream(const helib::Context& context, std::ostream& out)
-{
-  // write the algebra info
-  context.printout(out);
-}
-
-// sk is child of pk in HElib.
-void writeKeyToFile(std::string& pathPrefix,
-                    helib::Context& context,
-                    helib::SecKey& secretKey,
-                    bool pkNotSk)
-{
-  std::string path = pathPrefix + (pkNotSk ? ".pk" : ".sk");
-  std::ofstream keysFile(path, std::ios::binary);
-  if (!keysFile.is_open()) {
-    std::runtime_error("Cannot write keys to file at '" + path);
-  }
-
-  // write the context
-  context.writeTo(keysFile);
-
-  // write the keys
-  if (pkNotSk) {
-    const helib::PubKey& pk = secretKey;
-    pk.writeTo(keysFile);
-  } else {
-    secretKey.writeTo(keysFile);
-  }
-  std::cout << path << " size = "<<keysFile.tellp() << "\n";
-}
 
 int main(int argc, char* argv[])
 {
@@ -107,7 +75,8 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  std::cout << paramsOpts.p << ", " << paramsOpts.m << ", " << paramsOpts.r << ", " << paramsOpts.c << ", " << paramsOpts.Qbits << "\n";
+  std::cout << paramsOpts.p << ", " << paramsOpts.m << ", " << paramsOpts.r
+            << ", " << paramsOpts.c << ", " << paramsOpts.Qbits << std::endl;
 
   // Create the FHE context
   long p;
@@ -141,15 +110,47 @@ int main(int argc, char* argv[])
       std::cout << "File prefix: " << cmdLineOpts.outputPrefixPath << std::endl;
     }
 
-    // write only secret key to file
-    std::string path1 = cmdLineOpts.outputPrefixPath + "_beforeKSM";
-    writeKeyToFile(path1, *contextp, secretKey, 0);
+    // write context and only secret key to file
+    std::string sk_path = cmdLineOpts.outputPrefixPath + ".sk";
+    std::ofstream skFile(sk_path, std::ios::binary);
+    if (!skFile.is_open()) {
+      throw std::runtime_error("Could not open file '" + sk_path + "'.");
+    }
+    contextp->writeTo(skFile);
+    secretKey.writeOnlySecretKeyTo(skFile);
+    skFile.close();
 
-    // compute key-switching matrices
+    // create a public key
+    helib::PubKey& publicKey = secretKey;
+    // we will write the public key twice: once before creating the keyswitching
+    // matrices, and once after. The first file will be significantly smaller,
+    // and can be used for encryption. The second is large and is needed for
+    // homomorphic function evaluation.
+
+    // write context and encryption pk to a file <outputPrefixPath>Enc.pk
+    std::string enc_pk_path = cmdLineOpts.outputPrefixPath + "Enc.pk";
+    std::ofstream encPkFile(enc_pk_path, std::ios::binary);
+    if (!encPkFile.is_open()) {
+      throw std::runtime_error("Could not open file '" + enc_pk_path + "'.");
+    }
+    contextp->writeTo(encPkFile);
+    publicKey.writeTo(encPkFile);
+    encPkFile.close();
+
+    // now compute key-switching matrices
     helib::addSome1DMatrices(secretKey);
-    helib::addFrbMatrices(secretKey);    
-    std::string path2 = cmdLineOpts.outputPrefixPath + "_afterKSM";
-    writeKeyToFile(path2, *contextp, secretKey, 0);
+    helib::addFrbMatrices(secretKey);
+
+    // these key-switching matrices are now associated with the public key, and
+    // so we write context and public key to a file <outputPrefixPath>Eval.pk
+    std::string eval_pk_path = cmdLineOpts.outputPrefixPath + "Eval.pk";
+    std::ofstream evalPkFile(eval_pk_path, std::ios::binary);
+    if (!evalPkFile.is_open()) {
+      throw std::runtime_error("Could not open file '" + eval_pk_path + "'.");
+    }
+    contextp->writeTo(evalPkFile);
+    publicKey.writeTo(evalPkFile);
+    evalPkFile.close();
 
   } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
