@@ -831,6 +831,31 @@ TEST_P(TestBinIO_BGV, decryptWithDeserializedSecretKeyOnlyAfterComputation)
   EXPECT_EQ(ptxt, decrypted_result);
 }
 
+TEST_P(TestBinIO_BGV, decryptWithDeserializedSecretKeyOnlyAfterMultLowLvl)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::PtxtArray ptxt1(ea), ptxt2(ea), decrypted_result(ea);
+  ptxt1.random();
+  ptxt2.random();
+  helib::Ctxt ctxt1(publicKey);
+  ptxt1.encrypt(ctxt1);
+  helib::Ctxt ctxt2(publicKey);
+  ptxt2.encrypt(ctxt2);
+
+  EXPECT_NO_THROW(ptxt1 *= ptxt2);
+
+  EXPECT_NO_THROW(ctxt1.multLowLvl(ctxt2));
+
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt1, deserialized_sk));
+
+  EXPECT_EQ(ptxt1, decrypted_result);
+}
+
 TEST_P(TestBinIO_BGV,
        decryptDeserializedCiphertextWithDeserializedSecretKeyOnly)
 {
@@ -1445,8 +1470,13 @@ TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterComputation)
   helib::Ctxt ctxt(publicKey);
   ptxt.encrypt(ctxt);
 
+  EXPECT_NO_THROW(ptxt *= ptxt);
+  EXPECT_NO_THROW(ptxt += ptxt);
   EXPECT_NO_THROW(rotate(ptxt, 1));
 
+  EXPECT_NO_THROW(ctxt *= ctxt);
+  EXPECT_NO_THROW(ctxt += ctxt);
+  EXPECT_NO_THROW(ctxt.reLinearize());
   EXPECT_NO_THROW(ea.rotate(ctxt, 1));
 
   helib::SecKey deserialized_sk =
@@ -1454,6 +1484,31 @@ TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterComputation)
   EXPECT_NO_THROW(decrypted_result.decrypt(ctxt, deserialized_sk));
 
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
+}
+
+TEST_P(TestBinIO_CKKS, decryptWithDeserializedSecretKeyOnlyAfterMultLowLvl)
+{
+  std::stringstream ss;
+
+  secretKey.writeOnlySecretKeyTo(ss);
+
+  helib::PtxtArray ptxt1(ea), ptxt2(ea), decrypted_result(ea);
+  ptxt1.random();
+  ptxt2.random();
+  helib::Ctxt ctxt1(publicKey);
+  ptxt1.encrypt(ctxt1);
+  helib::Ctxt ctxt2(publicKey);
+  ptxt2.encrypt(ctxt2);
+
+  EXPECT_NO_THROW(ptxt1 *= ptxt2);
+
+  EXPECT_NO_THROW(ctxt1.multLowLvl(ctxt2));
+
+  helib::SecKey deserialized_sk =
+      helib::SecKey::readOnlySecretKeyFrom(ss, context);
+  EXPECT_NO_THROW(decrypted_result.decrypt(ctxt1, deserialized_sk));
+
+  EXPECT_EQ(ptxt1, helib::Approx(decrypted_result));
 }
 
 TEST_P(TestBinIO_CKKS,
@@ -1498,6 +1553,6 @@ INSTANTIATE_TEST_SUITE_P(Parameters,
                          TestBinIO_CKKS,
                          ::testing::Values(CKKSParameters(/*m=*/64,
                                                           /*precision=*/30,
-                                                          /*bits=*/30)));
+                                                          /*bits=*/60)));
 
 } // namespace
