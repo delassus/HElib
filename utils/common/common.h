@@ -36,11 +36,12 @@ using uniq_pair = std::pair<std::unique_ptr<T1>, std::unique_ptr<T2>>;
 
 /**
  * @brief Read from the stream a serialized context and key.
- * 
+ *
  * @tparam KEY The key type
  * @param keyFilePath Location of context and key
- * @param read_only_sk Whether the secret key was serialized using "WriteOnlySecretKey", defaulted to false.
- * @return uniq_pair<helib::Context, KEY> 
+ * @param read_only_sk Whether the secret key was serialized using
+ * "WriteOnlySecretKey", defaulted to false.
+ * @return uniq_pair<helib::Context, KEY>
  */
 template <typename KEY>
 uniq_pair<helib::Context, KEY> loadContextAndKey(const std::string& keyFilePath,

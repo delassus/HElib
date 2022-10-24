@@ -89,8 +89,7 @@ int main(int argc, char* argv[])
                                    .bits(paramsOpts.Qbits)
                                    .c(paramsOpts.c)
                                    .buildPtr();
-    
-    
+
     std::string ptxt_path = cmdLineOpts.outputPrefixPath + ".json";
     std::ofstream outPtxtFile(ptxt_path, std::ios::out);
     if (!outPtxtFile.is_open()) {
@@ -98,13 +97,12 @@ int main(int argc, char* argv[])
     }
     // to call encrypt, need to have number of plaintexts at top of file
     outPtxtFile << stoi(cmdLineOpts.ptxtCount) << std::endl;
-    for(int i = 0; i < stoi(cmdLineOpts.ptxtCount); i++){
+    for (int i = 0; i < stoi(cmdLineOpts.ptxtCount); i++) {
       helib::PtxtArray ptxt(*contextp);
       ptxt.random();
       ptxt.writeToJSON(outPtxtFile);
       outPtxtFile << std::endl;
     }
-    
 
   } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
