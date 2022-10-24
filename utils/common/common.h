@@ -34,6 +34,14 @@ inline std::string readline(std::istream& is)
 template <typename T1, typename T2>
 using uniq_pair = std::pair<std::unique_ptr<T1>, std::unique_ptr<T2>>;
 
+/**
+ * @brief Read from the stream a serialized context and key.
+ * 
+ * @tparam KEY The key type
+ * @param keyFilePath Location of context and key
+ * @param read_only_sk Whether the secret key was serialized using "WriteOnlySecretKey", defaulted to false.
+ * @return uniq_pair<helib::Context, KEY> 
+ */
 template <typename KEY>
 uniq_pair<helib::Context, KEY> loadContextAndKey(const std::string& keyFilePath,
                                                  bool read_only_sk = 0)
@@ -50,10 +58,10 @@ uniq_pair<helib::Context, KEY> loadContextAndKey(const std::string& keyFilePath,
   std::unique_ptr<KEY> keyp = std::make_unique<KEY>(*contextp);
   if constexpr (std::is_same_v<KEY, helib::SecKey>) {
     if (read_only_sk) {
-      
+
       keyp = std::make_unique<helib::SecKey>(
           helib::SecKey::readOnlySecretKeyFrom(keyFile, *contextp));
-      
+
     } else {
       keyp = std::make_unique<helib::SecKey>(
           helib::SecKey::readFrom(keyFile, *contextp));
