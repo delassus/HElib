@@ -14,6 +14,7 @@ struct CmdLineOpts
 {
   std::string paramFileName;
   std::string outputPrefixPath;
+  std::string ptxtCount = "1";
 };
 
 // Captures parameters for BGV
@@ -33,21 +34,24 @@ int main(int argc, char* argv[])
   // clang-format off
   helib::ArgMap()
         .toggle()
-        .separator(helib::ArgMap::Separator::WHITESPACE)
+        .separator(helib::ArgMap::Separator::WHITESPACE)        
         .named()
           .arg("-o", cmdLineOpts.outputPrefixPath,
                "choose an output prefix path.", nullptr)
+          .arg("-n", cmdLineOpts.ptxtCount, "the number of plaintexts to generate.")
         .required()
         .positional()
           .arg("<params-file>", cmdLineOpts.paramFileName,
-               "the parameters file.", nullptr)
+               "the parameters file.", nullptr)          
         .parse(argc, argv);
   // clang-format on
   // If not set by user, returns params file name without extension and "params"
   if (cmdLineOpts.outputPrefixPath.empty()) {
     std::string prefix = stripExtension(cmdLineOpts.paramFileName);
     std::size_t params_pos = prefix.rfind("params");
-    cmdLineOpts.outputPrefixPath = (params_pos == std::string::npos) ? prefix : prefix.substr(0, params_pos);
+    cmdLineOpts.outputPrefixPath = (params_pos == std::string::npos)
+                                       ? prefix
+                                       : prefix.substr(0, params_pos);
     std::cout << "File prefix: " << cmdLineOpts.outputPrefixPath << std::endl;
   }
   ParamsFileOpts paramsOpts;
@@ -85,16 +89,22 @@ int main(int argc, char* argv[])
                                    .bits(paramsOpts.Qbits)
                                    .c(paramsOpts.c)
                                    .buildPtr();
-    helib::PtxtArray ptxt(*contextp);
-    ptxt.random();
-    std::string ptxt_path = cmdLineOpts.outputPrefixPath + "ptxt.json";
+    
+    
+    std::string ptxt_path = cmdLineOpts.outputPrefixPath + ".json";
     std::ofstream outPtxtFile(ptxt_path, std::ios::out);
     if (!outPtxtFile.is_open()) {
       throw std::runtime_error("Could not open file '" + ptxt_path + "'.");
     }
     // to call encrypt, need to have number of plaintexts at top of file
-    outPtxtFile << "1" << std::endl;
-    ptxt.writeToJSON(outPtxtFile);
+    outPtxtFile << stoi(cmdLineOpts.ptxtCount) << std::endl;
+    for(int i = 0; i < stoi(cmdLineOpts.ptxtCount); i++){
+      helib::PtxtArray ptxt(*contextp);
+      ptxt.random();
+      ptxt.writeToJSON(outPtxtFile);
+      outPtxtFile << std::endl;
+    }
+    
 
   } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
