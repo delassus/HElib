@@ -18,7 +18,13 @@
 
 #include "test_common.h"
 #include "gtest/gtest.h"
-
+// Several of these tests relate to writing objects to stream and then reading
+// them back without using test suite parameters, particularly using a
+// "deserialized context". This causes challenges when validating against test
+// suite parameters and variables, as the underlying contexts have different
+// addresses. To accomodate this, in some places we will validate by writing
+// test suite parameters and variables to stream and then reading them back
+// using variables local to the specific test.
 namespace {
 
 struct BGVParameters
