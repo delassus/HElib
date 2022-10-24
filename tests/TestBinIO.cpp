@@ -783,7 +783,6 @@ TEST_P(
   helib::Ctxt deserialized_ctxt_copy(deserialized_ctxt);
   EXPECT_NO_THROW(deserialized_ctxt *= deserialized_ctxt_copy);
   EXPECT_NO_THROW(deserialized_ctxt += deserialized_ctxt_copy);
-  EXPECT_NO_THROW(deserialized_ctxt.reLinearize());
   EXPECT_NO_THROW(deserialized_context.getEA().rotate(deserialized_ctxt, 1));
 
   helib::PtxtArray ptxt_copy(ptxt);
@@ -1439,10 +1438,12 @@ TEST_P(
   helib::Ctxt deserialized_ctxt =
       helib::Ctxt::readFrom(ss1, deserialized_eval_pk);
   helib::Ctxt deserialized_ctxt_copy(deserialized_ctxt);
+  EXPECT_NO_THROW(deserialized_ctxt *= deserialized_ctxt_copy);
   EXPECT_NO_THROW(deserialized_ctxt += deserialized_ctxt_copy);
   EXPECT_NO_THROW(deserialized_context.getEA().rotate(deserialized_ctxt, 1));
 
   helib::PtxtArray ptxt_copy(ptxt);
+  ptxt *= ptxt_copy;
   ptxt += ptxt_copy;
   rotate(ptxt, 1);
   helib::PtxtArray decrypted_result(deserialized_context);
