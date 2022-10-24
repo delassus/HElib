@@ -47,7 +47,11 @@ int main(int argc, char* argv[])
     } else {
       throw std::runtime_error("Could not open file 'secretKey.json'.");
     }
-    // we are going to write the public key twice, once before we add the keyswitching matrices, and once after. Writing before gives a smaller public key which can be used for encryption (called the encPublicKey) and after gives a large public key which can be used for homomorphic function evaluation (called the evalPublicKey).
+    // we are going to write the public key twice, once before we add the
+    // keyswitching matrices, and once after. Writing before gives a smaller
+    // public key which can be used for encryption (called the encPublicKey) and
+    // after gives a large public key which can be used for homomorphic function
+    // evaluation (called the evalPublicKey).
     helib::PubKey& PublicKey = secretKey;
     // and write to a file
     std::ofstream outEncPublicKeyFile;
@@ -73,7 +77,8 @@ int main(int argc, char* argv[])
     // now we generate the evaluation keys
     helib::addSome1DMatrices(secretKey);
 
-    // now the keyswitching matrices are associated with the public key, we can write the larger evaluation public key. 
+    // now the keyswitching matrices are associated with the public key, we can
+    // write the larger evaluation public key.
     std::ofstream outEvalPublicKeyFile;
     outEvalPublicKeyFile.open("evalPublicKey.json", std::ios::out);
 

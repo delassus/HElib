@@ -184,9 +184,8 @@ int main(int argc, char* argv[])
 
   try {
     // Read in, encrypt, output.
-      encryptFromTo(cmdLineOpts, *contextp, *pkp);
-    }
-  catch (const std::invalid_argument& e) {
+    encryptFromTo(cmdLineOpts, *contextp, *pkp);
+  } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
               << e.what() << std::endl;
     std::remove(cmdLineOpts.outFilePath.c_str());
