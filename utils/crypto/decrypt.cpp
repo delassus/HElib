@@ -26,7 +26,7 @@ struct CmdLineOpts
   std::string skFilePath;
   std::string ctxtFilePath;
   std::string outFilePath;
-  bool read_only_sk = 0;
+  bool read_only_sk = 0; // Default to false for backward compatibility.
   long batchSize = 0;
   long nthreads = 0; // Default is 0 for number of cpus.
 };
@@ -60,7 +60,7 @@ void decryptFromTo(const CmdLineOpts& cmdLineOpts,
                                 reader.getTOC().getCols()};
   std::ofstream outFile;
   std::ostream* out;
-  
+
   if (!cmdLineOpts.outFilePath.empty()) {
     outFile.open(cmdLineOpts.outFilePath);
     if (!outFile.is_open()) {
@@ -121,13 +121,13 @@ int main(int argc, char* argv[])
     .separator(helib::ArgMap::Separator::WHITESPACE)
     .named()
     .optional()
-      .arg("-sk", cmdLineOpts.read_only_sk, "whether only the secret key is written. Defaults to false.")
       .arg("-o", cmdLineOpts.outFilePath,
            "the output file name.", nullptr)
       .arg("-b", cmdLineOpts.batchSize,
            "batch size, how many ctxts in memory. If not set or 0 defaults to the number of threads used.")
       .arg("-n", cmdLineOpts.nthreads,
            "number of threads to use. If not set or 0 defaults to the number of concurrent threads supported.", "num. of cores")
+      .toggle(true).arg("-s", cmdLineOpts.read_only_sk, "whether only the secret key is written.")
     .parse(argc, argv);
   // clang-format on
   // Set NTL nthreads
