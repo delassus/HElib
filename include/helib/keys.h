@@ -443,10 +443,9 @@ public:
   static SecKey readFrom(std::istream& str, const Context& context);
 
   /**
-   * @brief Read from the stream only the serialized secret key in binary
-   * format and add it to a PubKey to get a SecKey object.
+   * @brief Read from the stream only the serialized secret key polynomial in
+   *binary format using the provided context.
    * @param str Input `std::istream`.
-   * @param pubKey Public key matching the secret key.
    * @return The deserialized `SecKey` object.
    **/
   static SecKey readOnlySecretKeyFrom(std::istream& str,
