@@ -210,20 +210,24 @@ bool PubKey::operator==(const PubKey& other) const
 {
   if (this == &other)
     return true;
+
   if (&context != &other.context)
     return false;
   if (!pubEncrKey.equalsTo(other.pubEncrKey, /*comparePkeys=*/false))
     return false;
+
   if (skBounds.size() != other.skBounds.size())
     return false;
   for (size_t i = 0; i < skBounds.size(); i++)
     if (fabs(skBounds[i] - other.skBounds[i]) > 0.1)
       return false;
+
   if (keySwitching.size() != other.keySwitching.size())
     return false;
   for (size_t i = 0; i < keySwitching.size(); i++)
     if (keySwitching[i] != other.keySwitching[i])
       return false;
+
   if (keySwitchMap.size() != other.keySwitchMap.size())
     return false;
   for (size_t i = 0; i < keySwitchMap.size(); i++) {
@@ -1060,6 +1064,7 @@ bool SecKey::operator==(const SecKey& other) const
 {
   if (this == &other)
     return true;
+
   if (((const PubKey&)*this) != ((const PubKey&)other))
     return false;
   if (sKeys.size() != other.sKeys.size())
@@ -1551,6 +1556,7 @@ void SecKey::Encrypt(Ctxt& ctxt, const EncodedPtxt& eptxt) const
 void SecKey::Encrypt(Ctxt& ctxt, const EncodedPtxt_BGV& eptxt) const
 {
   HELIB_TIMER_START;
+
   assertTrue(!isCKKS(), "Encrypt: mismatched BGV ptxt / CKKS ctxt");
   assertEq((const PubKey*)this, &ctxt.pubKey, "Encrypt: public key mismatch");
   assertEq(&context, &eptxt.getContext(), "Encrypt: context mismatch");
@@ -1759,6 +1765,8 @@ SecKey SecKey::readFrom(std::istream& str, const Context& context)
   bool eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_BEGIN);
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find pre-secret key eyecatcher");
+
+  // Create a secret key from its public part.                    
   SecKey ret(PubKey::readFrom(str, context));
   // Set the secret part of the secret key.
   ret.sKeys = read_raw_vector<DoubleCRT>(str, context);
