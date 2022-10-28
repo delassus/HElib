@@ -427,6 +427,24 @@ TEST_P(TestBinIO_BGV, throwsWhenPostOnlySecretKeyEyeCatcherNotFound)
   EXPECT_THROW(secretKey.readOnlySecretKeyFrom(ss, context), helib::IOError);
 }
 
+TEST_P(TestBinIO_BGV, readOnlySecretKeyThrowsWhenMismatchContext)
+{
+  std::stringstream str;
+  secretKey.writeOnlySecretKeyTo(str);
+  helib::Context new_context(helib::ContextBuilder<helib::BGV>()
+                                 .m(41)
+                                 .p(p)
+                                 .r(r)
+                                 .bits(bits)
+                                 .gens(gens)
+                                 .ords(ords)
+                                 .mvec(mvec)
+                                 .build());
+  helib::SecKey deserialized_sk(new_context);
+  EXPECT_THROW(deserialized_sk.readOnlySecretKeyFrom(str, new_context),
+               helib::LogicError);
+}
+
 TEST_P(TestBinIO_BGV, readKeysFromDeserializeCorrectly)
 {
   std::stringstream str;
@@ -1085,6 +1103,20 @@ TEST_P(TestBinIO_CKKS, throwsWhenPostOnlySecretKeyEyeCatcherNotFound)
   ss.str(s);
 
   EXPECT_THROW(secretKey.readOnlySecretKeyFrom(ss, context), helib::IOError);
+}
+
+TEST_P(TestBinIO_CKKS, readOnlySecretKeyThrowsWhenMismatchContext)
+{
+  std::stringstream str;
+  secretKey.writeOnlySecretKeyTo(str);
+  helib::Context new_context(helib::ContextBuilder<helib::CKKS>()
+                                 .m(32)
+                                 .precision(precision)
+                                 .bits(bits)
+                                 .build());
+  helib::SecKey deserialized_sk(new_context);
+  EXPECT_THROW(deserialized_sk.readOnlySecretKeyFrom(str, new_context),
+               helib::LogicError);
 }
 
 TEST_P(TestBinIO_CKKS, readKeysFromDeserializeCorrectly)
