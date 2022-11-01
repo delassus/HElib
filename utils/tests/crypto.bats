@@ -180,7 +180,7 @@ function teardown {
   run $encrypt "${pk_file_bgv}" "${prefix_bgv}_more_slots.ptxt"
   assert [ "$status" -ne 0 ]
   assert [ "${lines[0]}" == "Exit due to IOError thrown:" ]
-  assert [ "${lines[1]}" == "Cannot deserialize to PtxtArray: not enough slots.  Trying to deserialize 13 elements.  Got 3 slots." ]
+  assert [ "${lines[1]}" == "Cannot deserialize to Ptxt: not enough slots.  Trying to deserialize 13 elements.  Got 3 slots." ]
   assert [ ! -f "${prefix_bgv}_more_slots.ctxt" ]
 }
 
@@ -232,7 +232,7 @@ function teardown {
   run $encrypt "${pk_file_ckks}" "${prefix_ckks}_more_slots.ptxt"
   assert [ "$status" -ne 0 ]
   assert [ "${lines[0]}" == "Exit due to IOError thrown:" ]
-  assert [ "${lines[1]}" == "Cannot deserialize to PtxtArray: not enough slots.  Trying to deserialize 12 elements.  Got 2 slots." ]
+  assert [ "${lines[1]}" == "Cannot deserialize to Ptxt: not enough slots.  Trying to deserialize 12 elements.  Got 2 slots." ]
   assert [ ! -f "${prefix_ckks}_more_slots.ctxt" ]
 }
 

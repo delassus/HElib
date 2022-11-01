@@ -38,14 +38,14 @@ def printEmptyPtxts(amount, nslots, scheme):
     for _ in range(amount):
         print(f'{{"HElibVersion":"{getVersion()}","content":{{"scheme":"{scheme}","slots":', end='')
         print(f'{[filler] * nslots}'.replace(', ', ','), end='')
-        print(f'}},"serializationVersion":"0.0.1","type":"PtxtArray"}}')
+        print(f'}},"serializationVersion":"0.0.1","type":"Ptxt"}}')
 
 def printPtxts(ptxts, header, scheme):
     print(str(header))
     for ptxt in ptxts:
         print(f'{{"HElibVersion":"{getVersion()}","content":{{"scheme":"{scheme}","slots":', end='')
         print(f'{ptxt}'.replace(', ', ','), end='')
-        print(f'}},"serializationVersion":"0.0.1","type":"PtxtArray"}}')
+        print(f'}},"serializationVersion":"0.0.1","type":"Ptxt"}}')
 
 def genSlot(csv, scheme):
     fn = int if scheme == "BGV" else float

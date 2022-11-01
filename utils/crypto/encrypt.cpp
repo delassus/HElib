@@ -33,6 +33,7 @@ struct CmdLineOpts
   long offset = 0;
 };
 
+template <typename SCHEME>
 void encryptFromTo(const CmdLineOpts& cmdLineOpts,
                    const helib::Context& context,
                    const helib::PubKey& pk)
@@ -46,6 +47,7 @@ void encryptFromTo(const CmdLineOpts& cmdLineOpts,
   }
 
   std::pair<long, long> dims = parseDimsHeader(readline(dataFile));
+
   // Here we 'batch'. Read in the batch size into memory.
   // Then, process with n threads. Repeat.
   // Write the header to file
@@ -55,10 +57,10 @@ void encryptFromTo(const CmdLineOpts& cmdLineOpts,
                              estimateCtxtSize(context, cmdLineOpts.offset));
 
   // Setting the stage
-  std::vector<helib::PtxtArray> ptxts;
+  std::vector<helib::Ptxt<SCHEME>> ptxts;
   std::vector<helib::Ctxt> ctxts;
   helib::Ctxt zero_ctxt(pk);
-  helib::PtxtArray zero_ptxt(context);
+  helib::Ptxt<SCHEME> zero_ptxt(context);
 
   // Read in a batch
   for (long remaining = dims.first * dims.second, writtenBatches = 0;
@@ -82,7 +84,7 @@ void encryptFromTo(const CmdLineOpts& cmdLineOpts,
     for (long i = first; i < last; ++i) {
       std::istringstream istr(ptxt_strings[i]);
       istr >> ptxts[i];
-      ptxts[i].encrypt(ctxts[i]);
+      pk.Encrypt(ctxts[i], ptxts[i]);
     }
 
     // Write to file
@@ -184,7 +186,14 @@ int main(int argc, char* argv[])
 
   try {
     // Read in, encrypt, output.
-    encryptFromTo(cmdLineOpts, *contextp, *pkp);
+    if (contextp->getP() == -1) { // CKKS
+      encryptFromTo<helib::CKKS>(cmdLineOpts, *contextp, *pkp);
+    } else if (contextp->getP() > 0) { // BGV
+      encryptFromTo<helib::BGV>(cmdLineOpts, *contextp, *pkp);
+    } else {
+      std::cerr << "Unrecognized scheme from context." << std::endl;
+      return EXIT_FAILURE;
+    }
   } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
               << e.what() << std::endl;

@@ -26,7 +26,6 @@ struct CmdLineOpts
   std::string skFilePath;
   std::string ctxtFilePath;
   std::string outFilePath;
-  bool read_only_sk = 0; // Default to false for backward compatibility.
   long batchSize = 0;
   long nthreads = 0; // Default is 0 for number of cpus.
 };
@@ -40,6 +39,7 @@ void writeDimsHeader(std::ostream& os, std::pair<long, long>& dims)
   }
 }
 
+template <typename SCHEME>
 void decryptFromTo(const CmdLineOpts& cmdLineOpts,
                    const helib::Context& context,
                    const helib::SecKey& sk)
@@ -50,14 +50,18 @@ void decryptFromTo(const CmdLineOpts& cmdLineOpts,
     throw std::runtime_error("Could not open file '" +
                              cmdLineOpts.ctxtFilePath + "'.");
   }
+
   // Read in a batch
-  std::vector<helib::PtxtArray> ptxts;
+  std::vector<helib::Ptxt<SCHEME>> ptxts;
   std::vector<helib::Ctxt> ctxts;
   helib::Ctxt zero_ctxt(sk);
-  helib::PtxtArray zero_ptxt(context);
+  helib::Ptxt<SCHEME> zero_ptxt(context);
+
   Reader<helib::Ctxt> reader(cmdLineOpts.ctxtFilePath, zero_ctxt);
+
   std::pair<long, long> dims = {reader.getTOC().getRows(),
                                 reader.getTOC().getCols()};
+
   std::ofstream outFile;
   std::ostream* out;
 
@@ -71,10 +75,13 @@ void decryptFromTo(const CmdLineOpts& cmdLineOpts,
   } else {
     out = &std::cout;
   }
+
   writeDimsHeader(*out, dims);
+
   for (long remaining = dims.first * dims.second, readBatches = 0;
        remaining > 0;
        remaining -= cmdLineOpts.batchSize, ++readBatches) {
+
     // Read in a batch
     long bsz =
         (remaining > cmdLineOpts.batchSize) ? cmdLineOpts.batchSize : remaining;
@@ -96,7 +103,7 @@ void decryptFromTo(const CmdLineOpts& cmdLineOpts,
 
     // Decrypt using NTL threads
     for (long i = first; i < last; ++i) {
-      ptxts[i].decrypt(ctxts[i], sk);
+      sk.Decrypt(ptxts[i], ctxts[i]);
     }
     NTL_EXEC_RANGE_END
 
@@ -127,9 +134,9 @@ int main(int argc, char* argv[])
            "batch size, how many ctxts in memory. If not set or 0 defaults to the number of threads used.")
       .arg("-n", cmdLineOpts.nthreads,
            "number of threads to use. If not set or 0 defaults to the number of concurrent threads supported.", "num. of cores")
-      .toggle(true).arg("-s", cmdLineOpts.read_only_sk, "whether only the secret key is written.")
     .parse(argc, argv);
   // clang-format on
+
   // Set NTL nthreads
   if (cmdLineOpts.nthreads == 0) {
     cmdLineOpts.nthreads = std::thread::hardware_concurrency();
@@ -175,13 +182,20 @@ int main(int argc, char* argv[])
   // Load Context and SecKey
   std::unique_ptr<helib::Context> contextp;
   std::unique_ptr<helib::SecKey> skp;
+
   std::tie(contextp, skp) =
-      loadContextAndKey<helib::SecKey>(cmdLineOpts.skFilePath,
-                                       cmdLineOpts.read_only_sk);
+      loadContextAndKey<helib::SecKey>(cmdLineOpts.skFilePath);
+
   // Read in, decrypt, output.
   try {
-    decryptFromTo(cmdLineOpts, *contextp, *skp);
-
+    if (contextp->getP() == -1) {
+      decryptFromTo<helib::CKKS>(cmdLineOpts, *contextp, *skp);
+    } else if (contextp->getP() > 0) {
+      decryptFromTo<helib::BGV>(cmdLineOpts, *contextp, *skp);
+    } else {
+      std::cerr << "Unrecognized scheme from context." << std::endl;
+      return EXIT_FAILURE;
+    }
   } catch (const std::invalid_argument& e) {
     std::cerr << "Exit due to invalid argument thrown:\n"
               << e.what() << std::endl;
