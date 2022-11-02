@@ -1,7 +1,7 @@
 # Key Generation and Management Pipeline
 
 ## Introduction
-This subdirectory provides additional utilities for use within a key management system. 
+This subdirectory provides additional utilities for use within a key management system. This code should be considered experimental.
 
 ## Difference to other utils
 This folder contains a plaintext generator `gen-data.cpp`, as well as `key-gen.cpp` an alternative key generation to `create-context.cpp`. `key-gen.cpp` differs from `create-context.cpp` in the following respects:
