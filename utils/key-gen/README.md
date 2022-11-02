@@ -21,9 +21,11 @@ All utilities have a help method by passing the `-h` flag. In the `key-gen` fold
 The optional `-o` flag defines the output file name, while the optional `-n` flag determines the number of plaintexts to generate. Running this command will create a file `small_data.json` with five plaintexts in the key-gen directory.
 2. Generate keys using `key-gen`
 ```
-./../build/bin/key-gen small_params.txt -o small
+./../build/bin/key-gen small_params.txt -s -o small
 ```
-The optional `-o` flag specifies the prefix of the generated keys: in this case, `small`. This will create three key files: `small.sk`, a secret key, `smallEnc.pk`, a public key for encryption, and `smallEval.pk`, a public key for homomorphic evaluation.
+The optional `-s` flag means that only the secret key polynomial will be written, resulting in a smaller file. The optional `-o` flag specifies the prefix of the generated keys: in this case, `small`. This will create three key files: `small.sk`, a secret key, `smallEnc.pk`, a public key for encryption, and `smallEval.pk`, a public key for homomorphic evaluation.
+
+All optional flags that can be passed to `create-context` can also be passed to `key-gen` -- to see a list, run the help method `-h`.
 3. Encrypt data
 ```
 ./../build/bin/encrypt smallEnc.pk small_data.json -o small.ctxt
@@ -33,4 +35,4 @@ The optional `-o` argument determines the file name of the resulting ciphertext 
 ```
 ./../build/bin/decrypt small.sk small.ctxt -o small_result.json -s
 ```
-This decrypts `small.ctxt` with the secret key `small.sk` and puts the resulting plaintext into `small_result.json`. The `-s` flag indicates that only the secret key polynomial is stored in `small.sk`, and must be used if keys were generated with `key-gen`.
+This decrypts `small.ctxt` with the secret key `small.sk` and puts the resulting plaintext into `small_result.json`. The `-s` flag indicates that only the secret key polynomial is stored in `small.sk`, and must be used if keys were generated using the `-s` flag with `key-gen`.
