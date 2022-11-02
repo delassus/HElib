@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     // to call encrypt, need to have number of plaintexts at top of file
     outPtxtFile << stoi(cmdLineOpts.ptxtCount) << std::endl;
     for (int i = 0; i < stoi(cmdLineOpts.ptxtCount); i++) {
-      helib::PtxtArray ptxt(*contextp);
+      helib::Ptxt<helib::BGV> ptxt(*contextp);
       ptxt.random();
       ptxt.writeToJSON(outPtxtFile);
       outPtxtFile << std::endl;
