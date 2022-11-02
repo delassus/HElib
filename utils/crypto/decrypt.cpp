@@ -182,10 +182,8 @@ int main(int argc, char* argv[])
   }
 
   // Load Context and SecKey
-  std::unique_ptr<helib::Context> contextp;
-  std::unique_ptr<helib::SecKey> skp;
 
-  std::tie(contextp, skp) =
+  auto [contextp, skp] =
       loadContextAndKey<helib::SecKey>(cmdLineOpts.skFilePath,
                                        cmdLineOpts.read_only_sk);
 
