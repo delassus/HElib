@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
                "generate Frobenius switch-key matrices.", nullptr)
          .arg("--info-file", cmdLineOpts.infoFile,
                "print algebra info to file.", nullptr)
-         .arg("-s",cmdLineOpts.write_only_sk,"whether to write only the secret key.")
+         .arg("-s",cmdLineOpts.write_only_sk,"write only the secret key polynomial to the secret key file.")
         .separator(helib::ArgMap::Separator::WHITESPACE)
         .named()
           .arg("--scheme", cmdLineOpts.scheme,
