@@ -255,21 +255,36 @@ function teardown {
   line="$(sed '3q;d' defg.info)"
   assert [ "$line" == "Recrypt data created." ]
 }
-## TODO: ask about, test assumes large secret key created
+
 @test "bootstrap thick context can perform bootstrapping" {
-  skip create-bootstrap-toy-params
-  skip cat "${prefix_bootstrap}.params"
-  skip run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THICK -o boots
-  skip assert [ "$status" -eq 0 ]
-  skip run "${test_bootstrap}" --thick boots.sk --quiet
-  skip assert [ "$status" -eq 0 ]
+  create-bootstrap-toy-params
+  cat "${prefix_bootstrap}.params"
+  run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THICK -o boots
+  assert [ "$status" -eq 0 ]
+  run "${test_bootstrap_keygen}" --thick boots.sk bootsEval.pk --quiet
+  assert [ "$status" -eq 0 ]
 }
 
-## TODO: ask about, test assumes large secret key created
+@test "bootstrap thick context can perform bootstrapping (sk only)" {
+  create-bootstrap-toy-params
+  run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THICK -o boots -s
+  assert [ "$status" -eq 0 ]
+  run "${test_bootstrap_keygen}" --thick boots.sk bootsEval.pk --quiet -s
+  assert [ "$status" -eq 0 ]
+}
+
 @test "bootstrap thin context can perform bootstrapping" {
- skip create-bootstrap-toy-params
- skip run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THIN -o boots
- skip assert [ "$status" -eq 0 ]
- skip run "${test_bootstrap}" boots.sk --quiet
- skip assert [ "$status" -eq 0 ]
+ create-bootstrap-toy-params
+ run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THIN -o boots
+ assert [ "$status" -eq 0 ]
+ run "${test_bootstrap_keygen}" boots.sk bootsEval.pk --quiet
+ assert [ "$status" -eq 0 ]
+}
+
+@test "bootstrap thin context can perform bootstrapping (sk only)" {
+ create-bootstrap-toy-params
+ run "${key_gen}" "${prefix_bootstrap}.params" --bootstrap THIN -o boots -s
+ assert [ "$status" -eq 0 ]
+ run "${test_bootstrap_keygen}" boots.sk bootsEval.pk --quiet -s
+ assert [ "$status" -eq 0 ]
 }
