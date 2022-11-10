@@ -26,57 +26,67 @@ class Reader
 
 private:
   const std::string filepath;
-  std::ifstream readStream;
+  std::shared_ptr<std::istream> streamPtr;
+  // std::ifstream readStream;
   D& scratch;
   std::shared_ptr<TOC> toc;
 
 public:
   Reader(const std::string& fname, D& init) :
       filepath(fname),
-      readStream(filepath, std::ios::binary),
+      streamPtr(std::make_shared<std::istream>(filepath, std::ios::binary)),
       scratch(init),
       toc(std::make_shared<TOC>())
   {
-    if (!readStream.is_open())
-      throw std::runtime_error("Could not open '" + filepath + "'.");
-    toc->read(readStream);
+    // if (!streamPtr->is_open())
+      // throw std::runtime_error("Could not open '" + filepath + "'.");
+    toc->read(*streamPtr);
+  }
+
+  Reader(std::istream& istream, D& init) :
+      filepath("__STREAM__"),
+      streamPtr(istream),
+      scratch(init),
+      toc(std::make_shared<TOC>())
+  {
+    toc->read(*streamPtr);
   }
 
   Reader(const Reader& rdr) :
       filepath(rdr.filepath),
-      readStream(filepath, std::ios::binary),
+      streamPtr(std::make_shared<std::istream>(filepath, std::ios::binary)),
       scratch(rdr.scratch),
       toc(rdr.toc)
   {
-    if (!readStream.is_open())
-      throw std::runtime_error("Could not open '" + rdr.filepath + "'.");
+    // if (!streamPtr->is_open())
+      // throw std::runtime_error("Could not open '" + rdr.filepath + "'.");
   }
 
   void readDatum(D& dest, int i, int j)
   {
-    if (readStream.eof())
-      readStream.clear();
+    if (streamPtr->eof())
+      streamPtr->clear();
 
-    readStream.seekg(toc->getIdx(i, j));
-    dest.read(readStream);
+    streamPtr->seekg(toc->getIdx(i, j));
+    dest.read(*streamPtr);
   }
 
   std::unique_ptr<D> readDatum(int i, int j)
   {
-    if (readStream.eof())
-      readStream.clear();
+    if (streamPtr->eof())
+      streamPtr->clear();
 
     std::unique_ptr<D> ptr = std::make_unique<D>(scratch);
-    readStream.seekg(toc->getIdx(i, j));
-    ptr->read(readStream);
+    streamPtr->seekg(toc->getIdx(i, j));
+    ptr->read(*streamPtr);
 
     return std::move(ptr);
   }
 
   std::unique_ptr<std::vector<std::vector<D>>> readAll()
   {
-    if (readStream.eof())
-      readStream.clear();
+    if (streamPtr->eof())
+      streamPtr->clear();
 
     auto m_ptr = std::make_unique<std::vector<std::vector<D>>>(
         toc->getRows(),
@@ -84,8 +94,8 @@ public:
 
     for (int i = 0; i < toc->getRows(); i++) {
       for (int j = 0; j < toc->getCols(); j++) {
-        readStream.seekg(toc->getIdx(i, j));
-        (*m_ptr)[i][j].read(readStream);
+        streamPtr->seekg(toc->getIdx(i, j));
+        (*m_ptr)[i][j].read(*streamPtr);
       }
     }
 
@@ -95,13 +105,13 @@ public:
   std::unique_ptr<std::vector<D>> readRow(int i)
   {
 
-    if (readStream.eof())
-      readStream.clear();
+    if (streamPtr->eof())
+      streamPtr->clear();
 
     auto v_ptr = std::make_unique<std::vector<D>>(toc->getCols(), scratch);
     for (int n = 0; n < toc->getCols(); n++) {
-      readStream.seekg(toc->getIdx(i, n));
-      (*v_ptr)[n].read(readStream);
+      streamPtr->seekg(toc->getIdx(i, n));
+      (*v_ptr)[n].read(*streamPtr);
     }
 
     return std::move(v_ptr);
@@ -109,13 +119,13 @@ public:
 
   std::unique_ptr<std::vector<D>> readCol(int j)
   {
-    if (readStream.eof())
-      readStream.clear();
+    if (streamPtr->eof())
+      streamPtr->clear();
 
     auto v_ptr = std::make_unique<std::vector<D>>(toc->getRows(), scratch);
     for (int n = 0; n < toc->getRows(); n++) {
-      readStream.seekg(toc->getIdx(n, j));
-      (*v_ptr)[n].read(readStream);
+      streamPtr->seekg(toc->getIdx(n, j));
+      (*v_ptr)[n].read(*streamPtr);
     }
 
     return std::move(v_ptr);
