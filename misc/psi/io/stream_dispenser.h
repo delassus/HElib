@@ -1,3 +1,14 @@
+/* Copyright (C) 2022 Intel Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef STREAM_DISPENSER_H_
+#define STREAM_DISPENSER_H_
+
+#include<functional>
+#include<tuple>
+#include<memory>
+
 template<typename Stream, typename... Args>
 class StreamDispenser {
  private:
@@ -18,3 +29,4 @@ inline auto make_stream_dispenser(Args... args) {
   return StreamDispenser<Stream, Args...>(args...);
 }
 
+#endif // STREAM_DISPENSER_H_
