@@ -37,20 +37,21 @@
 using sharedContext = std::shared_ptr<helib::Context>;
 using Ptxt = helib::Ptxt<helib::BGV>;
 
-template <typename TXT>
-helib::Database<TXT> readDbFromStream(std::istream& databaseFileStream,
+template <typename TXT, typename StreamDispenser>
+helib::Database<TXT> readDbFromStream(StreamDispenser& databaseStreamDispenser,
                                       const sharedContext& contextp,
                                       const helib::PubKey& pk)
 {
+  auto databaseStreamPtr = databaseStreamDispenser.get();
   TXT zero_txt(pk);
   // This is only needed for TXT = Ctxt
   std::optional<Reader<TXT>> reader;
   long nrow, ncol;
   if constexpr (std::is_same_v<TXT, Ptxt>) {
-    std::tie(nrow, ncol) = parseDimsHeader(readline(databaseFileStream));
+    std::tie(nrow, ncol) = parseDimsHeader(readline(*databaseStreamPtr.get()));
   } else {
     // TODO
-    reader.emplace(Reader<helib::Ctxt>(databaseFileStream, zero_txt));
+    reader.emplace(databaseStreamPtr, zero_txt);
     nrow = reader.value().getTOC().getRows();
     ncol = reader.value().getTOC().getCols();
   }
@@ -61,7 +62,7 @@ helib::Database<TXT> readDbFromStream(std::istream& databaseFileStream,
     // Read in ptxts
     std::vector<std::string> ptxt_strings(nrow * ncol);
     for (auto& ptxt : ptxt_strings) {
-      std::getline(databaseFileStream, ptxt, '\n');
+      std::getline(*databaseStreamPtr.get(), ptxt, '\n');
     }
     // Populate Matrix
     for (long i = 0; i < nrow; ++i) {
@@ -81,19 +82,20 @@ helib::Database<TXT> readDbFromStream(std::istream& databaseFileStream,
   return helib::Database<TXT>(data, contextp);
 }
 
-template <typename TXT>
-helib::Matrix<TXT> readQueryFromStream(std::istream& queryFileStream,
+template <typename TXT, typename StreamDispenser>
+helib::Matrix<TXT> readQueryFromStream(StreamDispenser& queryStreamDispenser,
                                        const helib::PubKey& pk)
 {
+  auto queryStreamPtr = queryStreamDispenser.get();
   TXT zero_txt(pk);
   // This is only needed for TXT = Ctxt
   std::optional<Reader<TXT>> reader;
   long nrow, ncol;
   if constexpr (std::is_same_v<TXT, Ptxt>) { // Ptxt query
-    std::tie(nrow, ncol) = parseDimsHeader(readline(queryFileStream));
+    std::tie(nrow, ncol) = parseDimsHeader(readline(*queryStreamPtr.get()));
   } else { // Ctxt query
     // TODO
-    reader.emplace(Reader<helib::Ctxt>(queryFileStream, zero_txt));
+    reader.emplace(queryStreamPtr, zero_txt);
     nrow = reader.value().getTOC().getRows();
     ncol = reader.value().getTOC().getCols();
   }
@@ -109,7 +111,7 @@ helib::Matrix<TXT> readQueryFromStream(std::istream& queryFileStream,
     // Read in ptxts
     std::vector<std::string> ptxt_strings(nrow * ncol);
     for (auto& ptxt : ptxt_strings) {
-      std::getline(queryFileStream, ptxt, '\n');
+      std::getline(*queryStreamPtr.get(), ptxt, '\n');
     }
     // Populate Matrix
     for (long i = 0; i < ptxt_strings.size(); ++i) {
@@ -136,26 +138,28 @@ helib::Database<TXT> readDbFromFile(const std::string& databaseFilePath,
                                     const sharedContext& contextp,
                                     const helib::PubKey& pk)
 {
+  auto streamDispenser = make_stream_dispenser<std::ifstream>(databaseFilePath);
   // Read in TXT file header
-  std::ifstream databaseFile(databaseFilePath);
-  if (!databaseFile.is_open()) {
-    throw std::runtime_error("Could not open file '" + databaseFilePath + "'.");
-  }
+  // std::ifstream databaseFile(databaseFilePath);
+  // if (!databaseFile.is_open()) {
+    // throw std::runtime_error("Could not open file '" + databaseFilePath + "'.");
+  // }
 
-  return readDbFromStream<TXT>(databaseFile, contextp, pk);
+  return readDbFromStream<TXT>(streamDispenser, contextp, pk);
 }
 
 template <typename TXT>
 helib::Matrix<TXT> readQueryFromFile(const std::string& queryFilePath,
                                      const helib::PubKey& pk)
 {
+  auto streamDispenser = make_stream_dispenser<std::ifstream>(queryFilePath);
   // Read in TXT file header
-  std::ifstream queryFile(queryFilePath);
-  if (!queryFile.is_open()) {
-    throw std::runtime_error("Could not open file '" + queryFilePath + "'.");
-  }
+  // std::ifstream queryFile(queryFilePath);
+  // if (!queryFile.is_open()) {
+    // throw std::runtime_error("Could not open file '" + queryFilePath + "'.");
+  // }
 
-  return readQueryFromStream<TXT>(queryFile, pk);
+  return readQueryFromStream<TXT>(streamDispenser, pk);
 }
 
 // Writes out a matrix to file

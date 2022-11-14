@@ -9,6 +9,9 @@
 #include<tuple>
 #include<memory>
 
+// Do not use this class directly. Create instances using the
+// make_stream_dispenser function
+// eg. make_stream_dispenser<std::ifstream>("filename", std::ios::binary)
 template<typename Stream, typename... Args>
 class StreamDispenser {
  private:

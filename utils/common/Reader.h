@@ -18,6 +18,7 @@
 #include <fstream>
 #include <exception>
 
+#include "stream_dispenser.h"
 #include "TOC.h"
 
 template <typename D>
@@ -26,26 +27,27 @@ class Reader
 
 private:
   const std::string filepath;
-  std::shared_ptr<std::istream> streamPtr;
-  // std::ifstream readStream;
+  std::unique_ptr<std::istream> streamPtr;
   D& scratch;
   std::shared_ptr<TOC> toc;
 
 public:
   Reader(const std::string& fname, D& init) :
       filepath(fname),
-      streamPtr(std::make_shared<std::istream>(filepath, std::ios::binary)),
+      streamPtr(std::make_unique<std::ifstream>(filepath, std::ios::binary)),
       scratch(init),
       toc(std::make_shared<TOC>())
   {
-    // if (!streamPtr->is_open())
-      // throw std::runtime_error("Could not open '" + filepath + "'.");
+    const std::ifstream& stream = *reinterpret_cast<std::ifstream*>(streamPtr.get());
+    if (!stream.is_open())
+      throw std::runtime_error("Could not open '" + filepath + "'.");
     toc->read(*streamPtr);
   }
 
-  Reader(std::istream& istream, D& init) :
+  template <typename STREAM>
+  Reader(std::unique_ptr<STREAM>& istreamPtr, D& init) :
       filepath("__STREAM__"),
-      streamPtr(istream),
+      streamPtr(std::move(istreamPtr)),
       scratch(init),
       toc(std::make_shared<TOC>())
   {
@@ -54,12 +56,14 @@ public:
 
   Reader(const Reader& rdr) :
       filepath(rdr.filepath),
-      streamPtr(std::make_shared<std::istream>(filepath, std::ios::binary)),
+      // This allows "copying" of streams by creating unique instances of the same stream
+      streamPtr(make_stream_dispenser<std::ifstream>(filepath, std::ios::binary).get()),
       scratch(rdr.scratch),
       toc(rdr.toc)
   {
-    // if (!streamPtr->is_open())
-      // throw std::runtime_error("Could not open '" + rdr.filepath + "'.");
+    const std::ifstream& stream = *reinterpret_cast<std::ifstream*>(streamPtr.get());
+    if (!stream.is_open())
+      throw std::runtime_error("Could not open '" + rdr.filepath + "'.");
   }
 
   void readDatum(D& dest, int i, int j)
