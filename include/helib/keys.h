@@ -424,32 +424,22 @@ public:
   /**
    * @brief Write out the `SecKey` object in binary format.
    * @param str Output `std::ostream`.
+   * @param sk_only Whether to write only the secret key polynomial and context,
+   *and not the public key.
    **/
-  void writeTo(std::ostream& str) const;
-
-  /**
-   * @brief Write out only the secret key part of the `SecKey` object in binary
-   *format.
-   * @param str Output `std::ostream`.
-   **/
-  void writeOnlySecretKeyTo(std::ostream& str) const;
+  void writeTo(std::ostream& str, bool sk_only = false) const;
 
   /**
    * @brief Read from the stream the serialized `SecKey` object in binary
    * format.
    * @param str Input `std::istream`.
+   * @param sk_only Whether the stream contains only the secret key object and
+   *context, and not the public key.
    * @return The deserialized `SecKey` object.
    **/
-  static SecKey readFrom(std::istream& str, const Context& context);
-
-  /**
-   * @brief Read from the stream only the serialized secret key polynomial in
-   *binary format using the provided context.
-   * @param str Input `std::istream`.
-   * @return The deserialized `SecKey` object.
-   **/
-  static SecKey readOnlySecretKeyFrom(std::istream& str,
-                                      const Context& context);
+  static SecKey readFrom(std::istream& str,
+                         const Context& context,
+                         bool sk_only = false);
 
   /**
    * @brief Write out the secret key (`SecKey`) object to the output

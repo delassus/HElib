@@ -71,7 +71,7 @@ void writeKeyToFile(std::string& pathPrefix,
                     helib::Context& context,
                     helib::SecKey& secretKey,
                     bool pkNotSk,
-                    bool write_only_sk = 0)
+                    bool write_only_sk = false)
 {
   std::string path = pathPrefix + (pkNotSk ? ".pk" : ".sk");
   std::ofstream keysFile(path, std::ios::binary);
@@ -87,10 +87,7 @@ void writeKeyToFile(std::string& pathPrefix,
     const helib::PubKey& pk = secretKey;
     pk.writeTo(keysFile);
   } else {
-    if (write_only_sk)
-      secretKey.writeOnlySecretKeyTo(keysFile);
-    else
-      secretKey.writeTo(keysFile);
+    secretKey.writeTo(keysFile, write_only_sk);
   }
 }
 
