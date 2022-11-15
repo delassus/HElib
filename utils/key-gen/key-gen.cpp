@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
     // key to <outputPrefixPath>Enc.pk
     NTL_EXEC_INDEX(2, skOrPk)
     std::string path =
-        cmdLineOpts.outputPrefixPath + ((bool)skOrPk ? "Enc" : "");
+        cmdLineOpts.outputPrefixPath + (skOrPk ? "Enc" : "");
     writeKeyToFile(path,
                    *contextp,
                    secretKey,
