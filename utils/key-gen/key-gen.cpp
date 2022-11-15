@@ -254,33 +254,30 @@ int main(int argc, char* argv[])
     }
 
     // Printout important info
+    std::ostream* outp = &std::cout;
+    std::ofstream fout;
     if (cmdLineOpts.infoFile) {
       // outputPrefixPath should be set further up main.
       std::string path = cmdLineOpts.outputPrefixPath + ".info";
-      std::ofstream out(path);
-      if (!out.is_open()) {
+      fout.open(path);
+      if (!fout.is_open()) {
         throw std::runtime_error("Cannot write keys to file at '" + path +
                                  "'.");
       }
-      printoutToStream(*contextp,
-                       out,
-                       cmdLineOpts.noSKM,
-                       cmdLineOpts.frobSKM,
-                       cmdLineOpts.bootstrappable != "NONE");
-    } else {
-      printoutToStream(*contextp,
-                       std::cout,
-                       cmdLineOpts.noSKM,
-                       cmdLineOpts.frobSKM,
-                       cmdLineOpts.bootstrappable != "NONE");
+      outp = &fout;
     }
+
+    printoutToStream(*contextp,
+                     *outp,
+                     cmdLineOpts.noSKM,
+                     cmdLineOpts.frobSKM,
+                     cmdLineOpts.bootstrappable != "NONE");
 
     NTL::SetNumThreads(2);
     // write the secret key to <outputPrefixPath>.sk and the encryption public
     // key to <outputPrefixPath>Enc.pk
     NTL_EXEC_INDEX(2, skOrPk)
-    std::string path =
-        cmdLineOpts.outputPrefixPath + (skOrPk ? "Enc" : "");
+    std::string path = cmdLineOpts.outputPrefixPath + (skOrPk ? "Enc" : "");
     writeKeyToFile(path,
                    *contextp,
                    secretKey,
