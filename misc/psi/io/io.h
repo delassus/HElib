@@ -73,7 +73,9 @@ helib::Database<TXT> readDbFromStream(StreamDispenser& databaseStreamDispenser,
     }
   } else { // Ctxt query
     NTL_EXEC_RANGE(nrow * ncol, first, last)
-    Reader<TXT> threadReader(reader.value());
+    // Create new reader for each thread
+    auto databaseStreamThreadPtr = databaseStreamDispenser.get();
+    Reader<TXT> threadReader(databaseStreamThreadPtr, zero_txt);
     for (long i = first; i < last; ++i) {
       long row = i / ncol;
       long col = i % ncol;
@@ -124,7 +126,9 @@ helib::Matrix<TXT> readQueryFromStream(StreamDispenser& queryStreamDispenser,
   } else { // Ctxt query
     // Read in ctxts
     NTL_EXEC_RANGE(nrow * ncol, first, last)
-    Reader<TXT> threadReader(reader.value());
+    // Create new reader for each thread
+    auto queryStreamThreadPtr = queryStreamDispenser.get();
+    Reader<TXT> threadReader(queryStreamThreadPtr, zero_txt);
     for (long i = first; i < last; ++i) {
       long row = i / ncol;
       long col = i % ncol;
