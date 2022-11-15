@@ -26,7 +26,7 @@ struct CmdLineOpts
   std::string skFilePath;
   std::string ctxtFilePath;
   std::string outFilePath;
-  bool read_only_sk = 0; // Default to false for backward compatibility.
+  bool read_only_sk = false; // Default to false for backward compatibility.
   long batchSize = 0;
   long nthreads = 0; // Default is 0 for number of cpus.
 };

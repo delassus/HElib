@@ -572,11 +572,8 @@ TEST_P(TestBinIO_BGV, canEncryptWithDeserializedSecretKeyOnly)
 TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKey)
 {
   std::stringstream ss;
-
   secretKey.writeTo(ss);
-
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context);
-
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
   ptxt.random();
   helib::Ctxt ctxt(publicKey);
@@ -590,9 +587,7 @@ TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKey)
 TEST_P(TestBinIO_BGV, canDecryptWithDeserializedSecretKeyOnly)
 {
   std::stringstream ss;
-
   secretKey.writeOnlySecretKeyTo(ss);
-
   helib::SecKey deserialized_sk =
       helib::SecKey::readOnlySecretKeyFrom(ss, context);
 

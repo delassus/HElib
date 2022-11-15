@@ -322,7 +322,6 @@ public:
   static constexpr std::string_view typeName = "SecKey";
 
   // Disable default constructor
-
   SecKey() = delete;
 
   // Default destructor
