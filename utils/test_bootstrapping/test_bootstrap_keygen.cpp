@@ -11,11 +11,8 @@
  */
 #include <helib/helib.h>
 #include <helib/debugging.h>
-
 #include <helib/ArgMap.h>
-
 #include <random>
-
 #include <common.h>
 
 helib::Ptxt<helib::BGV> generateRandomPtxt(const helib::Context& context)
@@ -55,17 +52,16 @@ int main(int argc, char** argv)
         .parse(argc, argv);
   // clang-format on
 
-  
   std::unique_ptr<helib::Context> pk_contextp;
   std::unique_ptr<helib::PubKey> pkp;
-  
+
   try {
     std::tie(pk_contextp, pkp) = loadContextAndKey<helib::PubKey>(pk_file_name);
   } catch (const helib::RuntimeError& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   }
-  
+
   // Load Context and PubKey
   helib::Context& context(*pk_contextp);
   helib::PubKey& publicKey(*pkp);
@@ -139,12 +135,13 @@ int main(int argc, char** argv)
     // Plaintext operation
     // Multiply with itself n times
   }
-  
+
   std::unique_ptr<helib::Context> sk_contextp;
   std::unique_ptr<helib::SecKey> skp;
 
   try {
-    std::tie(sk_contextp, skp) = loadContextAndKey<helib::SecKey>(sk_file_name, sk_only);
+    std::tie(sk_contextp, skp) =
+        loadContextAndKey<helib::SecKey>(sk_file_name, sk_only);
   } catch (const helib::RuntimeError& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
@@ -153,8 +150,9 @@ int main(int argc, char** argv)
   // Load secret key context and secret key
   helib::SecKey& secretKey(*skp);
   helib::Context& sk_context(*sk_contextp);
-  
-  // to avoid a context mismatch, we write ctxt to stream and then read it back with the secret key
+
+  // to avoid a context mismatch, we write ctxt to stream and then read it back
+  // with the secret key
   std::stringstream ss;
   ctxt.writeTo(ss);
   helib::Ctxt ctxt_copy = helib::Ctxt::readFrom(ss, secretKey);
