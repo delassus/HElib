@@ -1157,9 +1157,7 @@ TEST_P(TestBinIO_CKKS, readKeyPtrsFromDeserializeCorrectly)
 TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicKey)
 {
   std::stringstream ss;
-
   publicKey.writeTo(ss);
-
   helib::PubKey deserialized_pk = helib::PubKey::readFrom(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
@@ -1167,9 +1165,7 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicKey)
   helib::Ctxt ctxt(deserialized_pk);
 
   EXPECT_NO_THROW(ptxt.encrypt(ctxt));
-
   decrypted_result.decrypt(ctxt, secretKey);
-
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
@@ -1200,9 +1196,7 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedPublicEncryptionKeyAndContext)
 TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKey)
 {
   std::stringstream ss;
-
   secretKey.writeTo(ss);
-
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
@@ -1210,18 +1204,14 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKey)
   helib::Ctxt ctxt(deserialized_sk);
 
   EXPECT_NO_THROW(ptxt.encrypt(ctxt));
-
   decrypted_result.decrypt(ctxt, secretKey);
-
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
 TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKeyOnly)
 {
   std::stringstream ss;
-
   secretKey.writeTo(ss, true);
-
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context, true);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
@@ -1229,18 +1219,14 @@ TEST_P(TestBinIO_CKKS, canEncryptWithDeserializedSecretKeyOnly)
   helib::Ctxt ctxt(deserialized_sk);
 
   EXPECT_NO_THROW(ptxt.encrypt(ctxt));
-
   decrypted_result.decrypt(ctxt, secretKey);
-
   EXPECT_EQ(ptxt, helib::Approx(decrypted_result));
 }
 
 TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKey)
 {
   std::stringstream ss;
-
   secretKey.writeTo(ss);
-
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context);
 
   helib::PtxtArray ptxt(ea), decrypted_result(ea);
@@ -1256,7 +1242,6 @@ TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKey)
 TEST_P(TestBinIO_CKKS, canDecryptWithDeserializedSecretKeyOnly)
 {
   std::stringstream ss;
-
   secretKey.writeTo(ss, true);
 
   helib::SecKey deserialized_sk = helib::SecKey::readFrom(ss, context, true);
