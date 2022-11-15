@@ -1726,35 +1726,26 @@ std::istream& operator>>(std::istream& str, SecKey& sk)
   return str;
 }
 
-void SecKey::writeTo(std::ostream& str) const
+void SecKey::writeTo(std::ostream& str, bool sk_only) const
 {
   SerializeHeader<SecKey>().writeTo(str);
   writeEyeCatcher(str, EyeCatcher::SK_BEGIN);
 
-  // Write out the public key part first.
-  this->PubKey::writeTo(str);
+  if (!sk_only) {
+    // Write out the public key part first.
+    this->PubKey::writeTo(str);
+  } else {
+    // If only writing sk, just write the context.
+    this->getContext().writeTo(str);
+  }
 
-  // Write out
-  // 1. vector<DoubleCRT> sKeys
-
+  // Write out vector<DoubleCRT> sKeys
   write_raw_vector<DoubleCRT>(str, this->sKeys);
 
   writeEyeCatcher(str, EyeCatcher::SK_END);
 }
 
-void SecKey::writeOnlySecretKeyTo(std::ostream& str) const
-{
-  SerializeHeader<SecKey>().writeTo(str);
-  writeEyeCatcher(str, EyeCatcher::SK_BEGIN);
-  // write context to stream
-  this->getContext().writeTo(str);
-  // write secret key material to stream
-  write_raw_vector<DoubleCRT>(str, this->sKeys);
-
-  writeEyeCatcher(str, EyeCatcher::SK_END);
-}
-
-SecKey SecKey::readFrom(std::istream& str, const Context& context)
+SecKey SecKey::readFrom(std::istream& str, const Context& context, bool sk_only)
 {
   const auto header = SerializeHeader<SecKey>::readFrom(str);
   assertEq<IOError>(header.version,
@@ -1765,9 +1756,16 @@ SecKey SecKey::readFrom(std::istream& str, const Context& context)
   bool eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_BEGIN);
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find pre-secret key eyecatcher");
+  if (sk_only) {
+    // there should be a context written at this point in the file, check it
+    // matches provided context
+    assertEq(context, Context::readFrom(str), "Context mismatch");
+  }
+  // now construct a secret key. If public key is written, construct from pk,
+  // otherwise, construct from context
+  SecKey ret =
+      sk_only ? SecKey(context) : SecKey(PubKey::readFrom(str, context));
 
-  // Create a secret key from its public part.                    
-  SecKey ret(PubKey::readFrom(str, context));
   // Set the secret part of the secret key.
   ret.sKeys = read_raw_vector<DoubleCRT>(str, context);
 
@@ -1775,31 +1773,6 @@ SecKey SecKey::readFrom(std::istream& str, const Context& context)
   assertTrue<IOError>(eyeCatcherFound,
                       "Could not find post-secret key eyecatcher");
 
-  return ret;
-}
-
-SecKey SecKey::readOnlySecretKeyFrom(std::istream& str, const Context& context)
-{
-  // stream should be have a header, eyecatcher, context, and secretkey.
-  SecKey ret(context);
-  const auto header = SerializeHeader<SecKey>::readFrom(str);
-  assertEq<IOError>(header.version,
-                    Binio::VERSION_0_0_1_0,
-                    "Header: version " + header.versionString() +
-                        " not supported");
-
-  bool eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_BEGIN);
-  assertTrue<IOError>(eyeCatcherFound,
-                      "Could not find pre-secret key eyecatcher");
-  // read in context and check it matches
-  Context ser_context = Context::readFrom(str);
-  assertEq(context, ser_context, "Context mismatch");
-  // Set the secret part of the secret key.
-  ret.sKeys = read_raw_vector<DoubleCRT>(str, context);
-
-  eyeCatcherFound = readEyeCatcher(str, EyeCatcher::SK_END);
-  assertTrue<IOError>(eyeCatcherFound,
-                      "Could not find post-secret key eyecatcher");
   return ret;
 }
 
