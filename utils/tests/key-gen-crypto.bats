@@ -39,7 +39,7 @@ function setup {
 }
 
 function teardown {
-  cd -
+  cd $tmp_folder/..
   remove-test-directory "$tmp_folder"
 }
 
