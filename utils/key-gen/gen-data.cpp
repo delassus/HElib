@@ -83,12 +83,12 @@ int main(int argc, char* argv[])
 
   try {
     const helib::Context* contextp = helib::ContextBuilder<helib::BGV>()
-                                   .m(paramsOpts.m)
-                                   .p(p)
-                                   .r(paramsOpts.r)
-                                   .bits(paramsOpts.Qbits)
-                                   .c(paramsOpts.c)
-                                   .buildPtr();
+                                         .m(paramsOpts.m)
+                                         .p(p)
+                                         .r(paramsOpts.r)
+                                         .bits(paramsOpts.Qbits)
+                                         .c(paramsOpts.c)
+                                         .buildPtr();
 
     std::string ptxt_path = cmdLineOpts.outputPrefixPath + ".json";
     std::ofstream outPtxtFile(ptxt_path, std::ios::out);
