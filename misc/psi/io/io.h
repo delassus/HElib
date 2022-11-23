@@ -38,7 +38,7 @@ using sharedContext = std::shared_ptr<helib::Context>;
 using Ptxt = helib::Ptxt<helib::BGV>;
 
 template <typename TXT, typename StreamDispenser>
-helib::Database<TXT> readDbFromStream(StreamDispenser& databaseStreamDispenser,
+helib::Database<TXT> readDbFromStream(const StreamDispenser& databaseStreamDispenser,
                                       const sharedContext& contextp,
                                       const helib::PubKey& pk)
 {
@@ -88,7 +88,7 @@ helib::Database<TXT> readDbFromStream(StreamDispenser& databaseStreamDispenser,
 }
 
 template <typename TXT, typename StreamDispenser>
-helib::Matrix<TXT> readQueryFromStream(StreamDispenser& queryStreamDispenser,
+helib::Matrix<TXT> readQueryFromStream(const StreamDispenser& queryStreamDispenser,
                                        const helib::PubKey& pk)
 {
   auto queryStreamPtr = queryStreamDispenser.get();
