@@ -10,6 +10,12 @@
 # limitations under the License. See accompanying LICENSE file.
 
 # Check if the system has fallocate or mkfile (to pre-allocate the ctxt file)
+cmake_minimum_required(VERSION 3.16)
+project(Keygen)
+set(CMAKE_CXX_STANDARD 17)
+set(helib_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../helib_install/helib_pack/share/cmake/helib")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION" HELIB_VERSION)
+find_package(helib "${HELIB_VERSION}" EXACT REQUIRED)
 set(alloc_file_name "")
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 	set(alloc_file_name "fallocate")
