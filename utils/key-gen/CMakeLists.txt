@@ -8,10 +8,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License. See accompanying LICENSE file.
-
+cmake_minimum_required(VERSION 3.16)
+project(Keygen)
+set(CMAKE_CXX_STANDARD 17)
+set(helib_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../helib_install/helib_pack/share/cmake/helib")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/../../VERSION" HELIB_VERSION)
+find_package(helib "${HELIB_VERSION}" EXACT REQUIRED)
 add_executable(key-gen key-gen.cpp)
 add_executable(gen-data gen-data.cpp)
 
+target_include_directories(gen-data PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(key-gen PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(key-gen PRIVATE "../common")
 target_include_directories(gen-data PRIVATE "../common")
 
